@@ -9,6 +9,9 @@ import { LiveServiceDirectory } from "../components/LiveServiceDirectory";
 import { HowItWorks } from "../components/HowItWorks";
 import { WhyChooseUsSection } from "../components/WhyChooseUsSection";
 import { AppDownloadSection } from "../components/AppDownloadSection";
+import { TestimonialsSection } from "../components/TestimonialsSection";
+import { StatsBannerSection } from "../components/StatsBannerSection";
+import { FaqSection } from "../components/FaqSection";
 import { ProviderOnboarding } from "../components/ProviderOnboarding";
 import { Footer } from "../components/Footer";
 import { LocationPickerModal } from "../components/LocationPickerModal";
@@ -69,9 +72,9 @@ export default function Home() {
         onSelectLocation={handleLocationChange}
       />
 
-      {/* Conditionally rendered or Responsive App Layout:
-          On mobile screen sizes (max-md), it defaults to MobileAppExperience!
-          On desktop, user can also toggle "Mobile App Mode" to preview the app layout.
+      {/* Responsive or Toggled View:
+          On mobile screen sizes (< md), defaults to MobileAppExperience!
+          On desktop, user can also preview the mobile app layout with "Mobile App Mode".
       */}
       {isMobileAppMode ? (
         <div className="flex-1 flex flex-col items-center justify-start bg-slate-900 py-6 px-4">
@@ -108,9 +111,9 @@ export default function Home() {
             />
           </div>
 
-          {/* Desktop & Tablet Viewport (>= md): Full Landing Page Experience */}
+          {/* Desktop & Tablet Viewport (>= md): Full Landing Page Experience matching all mockups */}
           <div className="hidden md:flex flex-col flex-1">
-            {/* Header */}
+            {/* 1. Header with Golden Pin Logo & Navigation */}
             <Header
               userLocation={userLocation}
               onOpenLocationPicker={() => setIsLocationPickerOpen(true)}
@@ -121,7 +124,7 @@ export default function Home() {
 
             {/* Main Content */}
             <main className="flex-1">
-              {/* Hero Section */}
+              {/* 2. Hero Section: Find Trusted Home Service Technicians */}
               <HeroSection
                 userLocation={userLocation}
                 onOpenLocationPicker={() => setIsLocationPickerOpen(true)}
@@ -129,26 +132,32 @@ export default function Home() {
                 onQuickSearch={handleQuickSearch}
               />
 
-              {/* Live Service Directory (Popular Categories + Nearby Services + 4 Pillars) */}
+              {/* 3. Live Service Directory: Popular Categories (8) + Nearby Services (4) + 4 Pillars Bar */}
               <LiveServiceDirectory
                 userLocation={userLocation}
                 onOpenLocationPicker={() => setIsLocationPickerOpen(true)}
               />
 
-              {/* Section 1 from Image 1: How It Works / Trusted by Thousands (4 Steps) */}
+              {/* 4. Trusted by Thousands / How It Works (4 Steps) */}
               <HowItWorks />
 
-              {/* Section 2 from Image 2: Why Choose Us (Fast Services, Trusted Care + AC Tech + 4 Cards) */}
+              {/* 5. Fast Services, Trusted Care (AC Tech + 4 Cards) */}
               <WhyChooseUsSection />
 
-              {/* Mobile App Section: Dual Phones Mockup + Store Badges + 5 Golden Checks */}
+              {/* 6. Get Services on Your Mobile (Dual Phones Mockup + Badges + 5 Checks) */}
               <AppDownloadSection />
 
-              {/* Service Provider Onboarding */}
-              <ProviderOnboarding />
+              {/* 7. Real Stories, Real Satisfaction (3 Customer Reviews with 5 Stars) */}
+              <TestimonialsSection />
+
+              {/* 8. By the Numbers (1,800+ Services, 5,200+ Techs, 48k+ Customers, 96%) */}
+              <StatsBannerSection />
+
+              {/* 9. Frequently Asked Questions (5 Accordion Questions) */}
+              <FaqSection />
             </main>
 
-            {/* Footer */}
+            {/* 10. Footer with Socials, Newsletter & Copyright */}
             <Footer />
           </div>
         </>

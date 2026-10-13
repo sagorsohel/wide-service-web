@@ -82,10 +82,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           {/* Left Column: Headline, Inputs & Feature Pills (7 cols) */}
           <div className="lg:col-span-7 space-y-6">
             {/* Top Pill Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#fef3c7]/80 border border-[#fde68a] text-slate-800 text-xs font-semibold">
-              <span className="text-[#d49b1a] text-sm">🔧</span>
-              <span>Local Technicians • Real People • Real Service</span>
-            </div>
+           
 
             {/* Main Headline */}
             <h1 className="text-4xl sm:text-5xl lg:text-[54px] font-black tracking-tight leading-[1.12]">

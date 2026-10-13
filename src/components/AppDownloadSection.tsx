@@ -213,10 +213,7 @@ export const AppDownloadSection: React.FC = () => {
           {/* ============================================================ */}
           <div className="lg:col-span-4 space-y-5 text-center lg:text-left">
             {/* Pill Badge */}
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold">
-              <Zap className="w-3.5 h-3.5 fill-[#d49b1a] text-[#d49b1a]" />
-              <span>Mobile App</span>
-            </div>
+          
 
             {/* Heading */}
             <h2 className="text-3xl sm:text-4xl font-black tracking-tight leading-tight">

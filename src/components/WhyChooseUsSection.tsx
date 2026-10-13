@@ -64,10 +64,7 @@ export const WhyChooseUsSection: React.FC = () => {
           {/* Left Column: Heading, Subtitle & 4 Cards (7.5 cols) */}
           <div className="lg:col-span-8 space-y-6">
             {/* Pill Badge matching Image 2 */}
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fef3c7] border border-[#fde68a] text-slate-800 text-xs font-semibold">
-              <span className="text-[#d49b1a] text-xs">⚡</span>
-              <span>Why Choose Us</span>
-            </div>
+           
 
             {/* Stylized Heading matching Image 2 */}
             <h2 className="text-3xl sm:text-4xl font-black text-[#0f172a] tracking-tight leading-tight">
