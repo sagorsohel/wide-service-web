@@ -49,7 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="h-20 flex items-center justify-between gap-4">
           {/* Left: Brand Logo matching screenshot */}
-          <a href="#" className="flex items-center gap-2.5 group shrink-0">
+          <a href="/" className="flex items-center gap-2.5 group shrink-0">
             {/* Custom Golden Pin Logo Icon */}
             <div className="relative w-10 h-10 flex items-center justify-center">
               <svg
@@ -76,17 +76,18 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Center: Navigation Links with golden active indicator */}
           <nav className="hidden lg:flex items-center gap-8 text-[14px] font-medium text-slate-700">
             {[
-              { name: "Home", href: "#" },
-              { name: "Services", href: "#services" },
-              { name: "How It Works", href: "#how-it-works" },
-              { name: "About", href: "#features" },
-              { name: "Contact", href: "#download" },
+              { name: "Home", href: "/" },
+              { name: "Services", href: "/services" },
+              { name: "How It Works", href: "/#how-it-works" },
+              { name: "About", href: "/#download" },
+              { name: "Contact", href: "/#download" },
             ].map((item) => {
-              const isActive = currentNav === item.name;
+              const isActive = (activeNav || currentNav) === item.name;
               return (
-                <button
+                <a
                   key={item.name}
-                  onClick={() => handleNav(item.name, item.href)}
+                  href={item.href}
+                  onClick={() => setCurrentNav(item.name)}
                   className={`relative py-2 transition-colors cursor-pointer ${
                     isActive
                       ? "text-[#0f172a] font-bold"
@@ -97,7 +98,7 @@ export const Header: React.FC<HeaderProps> = ({
                   {isActive && (
                     <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#d49b1a] rounded-full" />
                   )}
-                </button>
+                </a>
               );
             })}
           </nav>

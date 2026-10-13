@@ -254,13 +254,13 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
               <div className="w-12 h-1 bg-[#d49b1a] rounded-full mt-1.5" />
             </div>
 
-            <button
-              onClick={() => setSelectedCategory(null)}
+            <a
+              href="/services"
               className="text-xs sm:text-sm font-bold text-[#d49b1a] hover:text-[#b88514] flex items-center gap-1 transition-colors cursor-pointer"
             >
               <span>View All Services</span>
               <span>→</span>
-            </button>
+            </a>
           </div>
 
           {/* 8-Card Grid matching mockup */}
