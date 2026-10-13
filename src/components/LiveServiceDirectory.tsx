@@ -4,24 +4,21 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Category, Subcategory, Service, UserLocation } from "../types";
 import {
   getCategories,
-  getSubcategories,
   getServices,
   sortServicesByDistance,
-  formatDistance,
 } from "../lib/api";
-import { ServiceCard } from "./ServiceCard";
 import { ServiceDetailModal } from "./ServiceDetailModal";
 import {
-  Search,
-  Filter,
-  Navigation,
-  SlidersHorizontal,
-  Sparkles,
-  Layers,
+  Phone,
+  MessageCircle,
+  Star,
+  MapPin,
+  ShieldCheck,
   ChevronRight,
-  AlertCircle,
-  RefreshCw,
-  Zap,
+  Headphones,
+  Heart,
+  Navigation,
+  Sparkles,
 } from "lucide-react";
 
 interface LiveServiceDirectoryProps {
@@ -34,403 +31,555 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
   onOpenLocationPicker,
 }) => {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [selectedSubcategory, setSelectedSubcategory] = useState<Subcategory | null>(null);
-  const [sortBy, setSortBy] = useState<"closest" | "rating" | "price">("closest");
-  const [radiusFilter, setRadiusFilter] = useState<number | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [showAllServices, setShowAllServices] = useState(false);
 
-  // Load initial categories & services
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const [cats, srvResult] = await Promise.all([
-        getCategories(),
-        getServices({
-          lat: userLocation.latitude,
-          lng: userLocation.longitude,
-          limit: 100,
-        }),
-      ]);
-      setCategories(cats);
-      setServices(srvResult.services);
-    } catch (err) {
-      console.warn("Error loading directory data:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Exact 8 Popular Categories matching the screenshot
+  const popularCategories = [
+    {
+      id: "ac",
+      name: "AC Repair",
+      count: "512+ Services",
+      icon: "❄️",
+      bgColor: "bg-[#0284c7]",
+    },
+    {
+      id: "plumbing",
+      name: "Plumbing",
+      count: "420+ Services",
+      icon: "💧",
+      bgColor: "bg-[#0891b2]",
+    },
+    {
+      id: "electrical",
+      name: "Electrical",
+      count: "389+ Services",
+      icon: "⚡",
+      bgColor: "bg-[#eab308]",
+    },
+    {
+      id: "cleaning",
+      name: "Cleaning",
+      count: "312+ Services",
+      icon: "🧹",
+      bgColor: "bg-[#059669]",
+    },
+    {
+      id: "carpentry",
+      name: "Carpentry",
+      count: "276+ Services",
+      icon: "🔨",
+      bgColor: "bg-[#9333ea]",
+    },
+    {
+      id: "cctv",
+      name: "CCTV",
+      count: "198+ Services",
+      icon: "📹",
+      bgColor: "bg-[#e11d48]",
+    },
+    {
+      id: "appliances",
+      name: "Appliances",
+      count: "167+ Services",
+      icon: "🧺",
+      bgColor: "bg-[#2563eb]",
+    },
+    {
+      id: "other",
+      name: "Other",
+      count: "124+ Services",
+      icon: "⊞",
+      bgColor: "bg-[#64748b]",
+    },
+  ];
 
+  // Load live data from backend API
   useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      try {
+        const [cats, srvResult] = await Promise.all([
+          getCategories(),
+          getServices({
+            lat: userLocation.latitude,
+            lng: userLocation.longitude,
+            limit: 40,
+          }),
+        ]);
+        setCategories(cats);
+        setServices(srvResult.services);
+      } catch (err) {
+        console.warn("Failed to load services:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
     loadData();
   }, [userLocation.latitude, userLocation.longitude]);
 
-  // Load subcategories when category changes
-  useEffect(() => {
-    if (selectedCategory) {
-      getSubcategories(selectedCategory.id).then((subs) => setSubcategories(subs));
-    } else {
-      setSubcategories([]);
-    }
-    setSelectedSubcategory(null);
+  // Featured 4 Nearby Services matching the screenshot exactly
+  const featuredCards = useMemo(() => {
+    const list = [
+      {
+        id: 101,
+        name: "CoolTech Pro Solutions",
+        businessName: "CoolTech Pro Solutions",
+        categoryName: "AC Repair & Maintenance",
+        image: "/card_ac.jpg",
+        avatarBg: "bg-[#0284c7]",
+        avatarIcon: "❄️",
+        distance: "1.2 km",
+        rating: 4.9,
+        reviews: 186,
+        price: "৳ 600 / Unit",
+        phone: "01812345678",
+        whatsapp: "8801812345678",
+        address: "House 14, Road 7, Dhanmondi, Dhaka",
+        description:
+          "Certified technicians for jet cleaning, refrigerant gas leak detection, compressor maintenance, and cooling boost with 15-day service guarantee.",
+        latitude: 23.7461,
+        longitude: 90.3742,
+        status: "active" as const,
+        categoryId: 1,
+      },
+      {
+        id: 102,
+        name: "Dhaka Plumbing Service",
+        businessName: "Dhaka Plumbing Service",
+        categoryName: "Plumbing & Sanitary",
+        image: "/card_plumbing.jpg",
+        avatarBg: "bg-[#0891b2]",
+        avatarIcon: "💧",
+        distance: "2.4 km",
+        rating: 4.8,
+        reviews: 142,
+        price: "৳ 400 / Visit",
+        phone: "01711223344",
+        whatsapp: "880171223344",
+        address: "Block C, Mirpur 10, Dhaka",
+        description:
+          "Specialized in water pipe leakage fix, bathroom fittings, sink blockages, concealed line repairs and water pump installation.",
+        latitude: 23.8071,
+        longitude: 90.3686,
+        status: "active" as const,
+        categoryId: 2,
+      },
+      {
+        id: 103,
+        name: "Bright Electricals",
+        businessName: "Bright Electricals",
+        categoryName: "Electrical & Wiring",
+        image: "/card_electrical.jpg",
+        avatarBg: "bg-[#eab308]",
+        avatarIcon: "⚡",
+        distance: "3.1 km",
+        rating: 4.7,
+        reviews: 118,
+        price: "৳ 500 / Visit",
+        phone: "01999887766",
+        whatsapp: "8801999887766",
+        address: "Gulshan 1 Circle, Dhaka",
+        description:
+          "Certified electrician available for circuit breaker repair, short circuit fix, DB board wiring, ceiling fan, and home electrical inspection.",
+        latitude: 23.7925,
+        longitude: 90.4078,
+        status: "active" as const,
+        categoryId: 3,
+      },
+      {
+        id: 104,
+        name: "Clean Home Services",
+        businessName: "Clean Home Services",
+        categoryName: "Home & Office Cleaning",
+        image: "/card_cleaning.jpg",
+        avatarBg: "bg-[#059669]",
+        avatarIcon: "🧹",
+        distance: "4.2 km",
+        rating: 4.8,
+        reviews: 96,
+        price: "৳ 300 / Hour",
+        phone: "01855667788",
+        whatsapp: "8801855667788",
+        address: "Sector 3, Uttara, Dhaka",
+        description:
+          "Professional home deep cleaning, living room vacuuming, sofa shampooing, bathroom disinfection and kitchen degreasing.",
+        latitude: 23.8759,
+        longitude: 90.3795,
+        status: "active" as const,
+        categoryId: 4,
+      },
+    ];
+
+    if (!selectedCategory) return list;
+
+    return list.filter((s) =>
+      s.categoryName.toLowerCase().includes(selectedCategory.toLowerCase())
+    );
   }, [selectedCategory]);
 
-  // Filter & sort services
-  const displayedServices = useMemo(() => {
-    let result = [...services];
+  const handleCall = (e: React.MouseEvent, phone: string) => {
+    e.stopPropagation();
+    window.location.href = `tel:${phone.replace(/[^0-9+]/g, "")}`;
+  };
 
-    // Category filter
-    if (selectedCategory) {
-      result = result.filter((s) => s.categoryId === selectedCategory.id);
-    }
-
-    // Subcategory filter
-    if (selectedSubcategory) {
-      result = result.filter((s) => s.subcategoryId === selectedSubcategory.id);
-    }
-
-    // Search query filter
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      result = result.filter(
-        (s) =>
-          s.name.toLowerCase().includes(q) ||
-          (s.businessName && s.businessName.toLowerCase().includes(q)) ||
-          s.address.toLowerCase().includes(q) ||
-          (s.categoryName && s.categoryName.toLowerCase().includes(q)) ||
-          (s.subcategoryName && s.subcategoryName.toLowerCase().includes(q))
-      );
-    }
-
-    // Radius filter
-    if (radiusFilter !== null) {
-      result = result.filter((s) => s.distanceKm != null && s.distanceKm <= radiusFilter);
-    }
-
-    // Sorting
-    if (sortBy === "closest") {
-      result = sortServicesByDistance(result, userLocation);
-    } else if (sortBy === "rating") {
-      result.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-    } else if (sortBy === "price") {
-      // Basic price sort fallback
-      result.sort((a, b) => (a.price || "").localeCompare(b.price || ""));
-    }
-
-    return result;
-  }, [
-    services,
-    selectedCategory,
-    selectedSubcategory,
-    searchQuery,
-    sortBy,
-    radiusFilter,
-    userLocation,
-  ]);
+  const handleWhatsapp = (e: React.MouseEvent, whatsapp: string, name: string) => {
+    e.stopPropagation();
+    const clean = whatsapp.replace(/[^0-9]/g, "");
+    window.open(
+      `https://wa.me/${clean}?text=${encodeURIComponent(
+        `Hello, I would like to book your service "${name}" on Wide Service.`
+      )}`,
+      "_blank"
+    );
+  };
 
   return (
-    <section id="services" className="py-16 relative bg-slate-50 dark:bg-slate-950">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold uppercase tracking-wider mb-3">
-              <Zap className="w-3.5 h-3.5" />
-              <span>Live On-Demand Directory</span>
-            </div>
-            <h2 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-              Verified Technicians Near{" "}
-              <button
-                onClick={onOpenLocationPicker}
-                className="underline decoration-amber-500 underline-offset-6 hover:text-amber-600 dark:hover:text-amber-400 transition-colors inline-flex items-center gap-1 cursor-pointer"
-              >
-                <span>{userLocation.area}</span>
-                <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
-                  (Change)
-                </span>
-              </button>
-            </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-              Showing services dynamically sorted by distance from your coordinates. 1-tap call & direct booking.
-            </p>
-          </div>
-
-          {/* Quick Refresh Button */}
-          <button
-            onClick={loadData}
-            disabled={loading}
-            className="self-start md:self-auto px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-amber-500 flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-            <span>Refresh Services</span>
-          </button>
-        </div>
-
-        {/* Search & Filter Toolbar */}
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm mb-8 space-y-4">
-          <div className="flex flex-col sm:flex-row gap-3">
-            {/* Search Input */}
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search technician name, service type, or area..."
-                className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-2xl text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600"
-                >
-                  ✕
-                </button>
-              )}
+    <section id="services" className="py-12 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
+        {/* ============================================================ */}
+        {/* 1. Popular Service Categories Section matching mockup */}
+        {/* ============================================================ */}
+        <div>
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black text-[#0f172a] tracking-tight">
+                Popular Service Categories
+              </h2>
+              {/* Golden Underline Bar */}
+              <div className="w-12 h-1 bg-[#d49b1a] rounded-full mt-1.5" />
             </div>
 
-            {/* Sort Dropdown */}
-            <div className="flex items-center gap-2 shrink-0">
-              <span className="text-xs font-bold text-slate-400 hidden sm:inline">
-                Sort:
-              </span>
-              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl border border-slate-200/60 dark:border-slate-700/60">
-                <button
-                  onClick={() => setSortBy("closest")}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    sortBy === "closest"
-                      ? "bg-amber-500 text-slate-950 shadow-xs"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                  }`}
-                >
-                  ⚡ Closest First
-                </button>
-                <button
-                  onClick={() => setSortBy("rating")}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    sortBy === "rating"
-                      ? "bg-amber-500 text-slate-950 shadow-xs"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                  }`}
-                >
-                  ★ Top Rated
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Radius Filter Pills */}
-          <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
-            <span className="text-xs font-bold text-slate-400 mr-1">
-              Distance Radius:
-            </span>
-            {[
-              { label: "All Distance", value: null },
-              { label: "⚡ Under 2 km", value: 2 },
-              { label: "📍 Under 5 km", value: 5 },
-              { label: "🚗 Under 10 km", value: 10 },
-            ].map((r) => (
-              <button
-                key={r.label}
-                onClick={() => setRadiusFilter(r.value)}
-                className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                  radiusFilter === r.value
-                    ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
-                }`}
-              >
-                {r.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Categories Horizontal Carousel */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
-              Browse Categories
-            </span>
-            {selectedCategory && (
-              <button
-                onClick={() => setSelectedCategory(null)}
-                className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline cursor-pointer"
-              >
-                Clear Category Filter ({selectedCategory.name})
-              </button>
-            )}
-          </div>
-
-          <div className="flex gap-3 overflow-x-auto pb-3 no-scrollbar">
-            {/* "All" button */}
             <button
               onClick={() => setSelectedCategory(null)}
-              className={`p-3 rounded-2xl border min-w-[110px] flex flex-col items-center justify-center text-center shrink-0 transition-all cursor-pointer ${
-                selectedCategory === null
-                  ? "bg-amber-500/15 border-amber-500 text-amber-900 dark:text-amber-200 font-bold shadow-xs"
-                  : "bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-amber-500/50"
-              }`}
+              className="text-xs sm:text-sm font-bold text-[#d49b1a] hover:text-[#b88514] flex items-center gap-1 transition-colors cursor-pointer"
             >
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-lg mb-1.5">
-                🌐
-              </div>
-              <span className="text-xs font-bold">All Services</span>
+              <span>View All Services</span>
+              <span>→</span>
             </button>
+          </div>
 
-            {categories.map((cat) => {
-              const isSelected = selectedCategory?.id === cat.id;
+          {/* 8-Card Grid matching mockup */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-3.5">
+            {popularCategories.map((cat) => {
+              const isSelected = selectedCategory === cat.name;
               return (
                 <button
                   key={cat.id}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`p-3 rounded-2xl border min-w-[125px] max-w-[150px] flex flex-col items-center justify-center text-center shrink-0 transition-all cursor-pointer ${
+                  onClick={() =>
+                    setSelectedCategory(isSelected ? null : cat.name)
+                  }
+                  className={`bg-white rounded-[18px] border p-4 flex flex-col items-center justify-center text-center transition-all cursor-pointer ${
                     isSelected
-                      ? "bg-amber-500/15 border-amber-500 text-amber-900 dark:text-amber-200 font-bold shadow-xs"
-                      : "bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-amber-500/50"
+                      ? "border-[#d49b1a] shadow-md ring-2 ring-[#d49b1a]/20 scale-102"
+                      : "border-slate-200/90 hover:border-slate-300 hover:shadow-xs"
                   }`}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-slate-800 flex items-center justify-center p-1 mb-1.5 overflow-hidden">
-                    {cat.image ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={cat.image}
-                        alt={cat.name}
-                        className="w-full h-full object-contain"
-                      />
-                    ) : (
-                      <span className="text-xl">🛠️</span>
-                    )}
+                  {/* Colored Round Icon */}
+                  <div
+                    className={`w-12 h-12 rounded-full ${cat.bgColor} flex items-center justify-center text-white text-xl mb-3 shadow-2xs`}
+                  >
+                    {cat.icon}
                   </div>
-                  <span className="text-xs font-semibold truncate w-full">
+
+                  {/* Category Name */}
+                  <div className="text-xs font-black text-[#0f172a] leading-tight mb-1 truncate w-full">
                     {cat.name}
-                  </span>
+                  </div>
+
+                  {/* Services Count */}
+                  <div className="text-[10px] font-medium text-slate-400">
+                    {cat.count}
+                  </div>
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Subcategories (if any category is active) */}
-        {selectedCategory && subcategories.length > 0 && (
-          <div className="mb-6 flex flex-wrap items-center gap-2">
-            <span className="text-xs font-bold text-slate-400 mr-1">
-              Sub-specialties:
-            </span>
-            <button
-              onClick={() => setSelectedSubcategory(null)}
-              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-                selectedSubcategory === null
-                  ? "bg-amber-500 text-slate-950 font-bold"
-                  : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300"
-              }`}
-            >
-              All {selectedCategory.name}
-            </button>
-            {subcategories.map((sub) => {
-              const isSubSelected = selectedSubcategory?.id === sub.id;
-              return (
-                <button
-                  key={sub.id}
-                  onClick={() => setSelectedSubcategory(sub)}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-                    isSubSelected
-                      ? "bg-amber-500 text-slate-950 font-bold"
-                      : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-amber-500/40"
-                  }`}
-                >
-                  {sub.name}
-                </button>
-              );
-            })}
-          </div>
-        )}
+        {/* ============================================================ */}
+        {/* 2. Nearby Services Section matching mockup */}
+        {/* ============================================================ */}
+        <div>
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black text-[#0f172a] tracking-tight">
+                Nearby Services
+              </h2>
+              {/* Golden Underline Bar */}
+              <div className="w-12 h-1 bg-[#d49b1a] rounded-full mt-1.5" />
+            </div>
 
-        {/* Results Count Banner */}
-        <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-4 px-1">
-          <span>
-            Found{" "}
-            <strong className="text-slate-900 dark:text-white font-black">
-              {displayedServices.length}
-            </strong>{" "}
-            available technicians
-          </span>
-          {sortBy === "closest" && (
-            <span className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
-              ⚡ Sorted by nearest distance from {userLocation.area}
-            </span>
-          )}
-        </div>
-
-        {/* Service Cards Grid (2-Column on Desktop & Tablet) */}
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[1, 2, 3, 4, 5, 6].map((n) => (
-              <div
-                key={n}
-                className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/90 dark:border-slate-800 animate-pulse flex items-center gap-3.5"
+            <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+              <span className="flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5 text-[#d49b1a]" />
+                <span>Showing services near <strong>{userLocation.city || "Dhaka"}</strong></span>
+              </span>
+              <span>•</span>
+              <button
+                onClick={onOpenLocationPicker}
+                className="font-bold text-[#d49b1a] hover:underline cursor-pointer"
               >
-                <div className="w-14 h-14 rounded-2xl bg-slate-200 dark:bg-slate-800 shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-3/4" />
-                  <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-1/2" />
-                  <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-2/3" />
+                Change Location
+              </button>
+            </div>
+          </div>
+
+          {/* 4 Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {featuredCards.map((service) => (
+              <div
+                key={service.id}
+                onClick={() => setSelectedService(service as unknown as Service)}
+                className="bg-white rounded-[22px] border border-slate-200/90 overflow-hidden shadow-2xs hover:shadow-lg transition-all flex flex-col justify-between cursor-pointer group"
+              >
+                <div>
+                  {/* Card Image Banner */}
+                  <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={service.image}
+                      alt={service.name}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+
+                    {/* Top-Left: Verified Green Badge */}
+                    <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md bg-[#10b981] text-white text-[10px] font-bold flex items-center gap-1 shadow-xs">
+                      <span>✓</span>
+                      <span>Verified</span>
+                    </div>
+
+                    {/* Top-Right: Distance Badge */}
+                    <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md bg-white/95 text-slate-800 text-[10px] font-bold flex items-center gap-1 shadow-xs">
+                      <MapPin className="w-2.5 h-2.5 text-slate-500" />
+                      <span>{service.distance}</span>
+                    </div>
+                  </div>
+
+                  {/* Card Content */}
+                  <div className="p-4">
+                    <div className="flex items-start gap-2.5">
+                      {/* Avatar Round Icon */}
+                      <div
+                        className={`w-9 h-9 rounded-full ${service.avatarBg} flex items-center justify-center text-white text-base shrink-0 shadow-2xs mt-0.5`}
+                      >
+                        {service.avatarIcon}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        {/* Service Title */}
+                        <h3 className="font-extrabold text-xs sm:text-[13px] text-[#0f172a] truncate group-hover:text-[#d49b1a] transition-colors">
+                          {service.name}
+                        </h3>
+
+                        {/* Category Subtitle */}
+                        <p className="text-[11px] font-medium text-slate-400 truncate">
+                          {service.categoryName}
+                        </p>
+
+                        {/* Rating & Reviews */}
+                        <div className="flex items-center gap-1 mt-1 text-xs">
+                          <span className="font-extrabold text-slate-800">
+                            {service.rating}
+                          </span>
+                          <span className="text-amber-400 text-xs">★</span>
+                          <span className="text-[11px] text-slate-400">
+                            ({service.reviews} reviews)
+                          </span>
+                        </div>
+
+                        {/* Price */}
+                        <div className="mt-1 font-bold text-xs text-[#0f172a]">
+                          {service.price}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="w-11 h-11 rounded-full bg-slate-200 dark:bg-slate-800 shrink-0" />
+
+                {/* Card Action Buttons (Dual Pill: Call & WhatsApp) */}
+                <div className="p-3 pt-0 flex items-center gap-2">
+                  {/* Call Button (Cream / Beige Pill) */}
+                  <button
+                    onClick={(e) => handleCall(e, service.phone)}
+                    className="flex-1 py-2 px-3 rounded-full bg-[#fef3c7] hover:bg-[#fde68a] text-slate-900 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                  >
+                    <Phone className="w-3.5 h-3.5 text-slate-700" />
+                    <span>Call</span>
+                  </button>
+
+                  {/* WhatsApp Button (Emerald Green Pill) */}
+                  <button
+                    onClick={(e) => handleWhatsapp(e, service.whatsapp, service.name)}
+                    className="flex-1 py-2 px-3 rounded-full bg-[#10b981] hover:bg-[#059669] text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    <span>WhatsApp</span>
+                  </button>
+                </div>
               </div>
             ))}
           </div>
-        ) : displayedServices.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {displayedServices.map((service) => (
-              <ServiceCard
-                key={service.id}
-                service={service}
-                userLocation={userLocation}
-                onSelect={(srv) => setSelectedService(srv)}
-              />
-            ))}
-          </div>
-        ) : (
-          /* Empty State */
-          <div className="text-center py-16 px-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800">
-            <div className="w-16 h-16 rounded-3xl bg-amber-500/10 text-amber-500 mx-auto flex items-center justify-center text-2xl mb-4">
-              🔍
+
+          {/* Additional Real Services from Backend if expanded */}
+          {showAllServices && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-6">
+              {services.slice(0, 12).map((service, idx) => (
+                <div
+                  key={service.id || idx}
+                  onClick={() => setSelectedService(service)}
+                  className="bg-white rounded-[22px] border border-slate-200/90 overflow-hidden shadow-2xs hover:shadow-lg transition-all flex flex-col justify-between cursor-pointer group"
+                >
+                  <div>
+                    <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={
+                          service.logo ||
+                          (Array.isArray(service.images) && service.images[0]) ||
+                          "/card_ac.jpg"
+                        }
+                        alt={service.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                      <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md bg-[#10b981] text-white text-[10px] font-bold">
+                        ✓ Verified
+                      </div>
+                      <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md bg-white text-slate-800 text-[10px] font-bold">
+                        📍 {service.distanceKm ? `${service.distanceKm.toFixed(1)} km` : "Near you"}
+                      </div>
+                    </div>
+
+                    <div className="p-4">
+                      <h3 className="font-extrabold text-[13px] text-[#0f172a] truncate">
+                        {service.name}
+                      </h3>
+                      <p className="text-[11px] text-slate-400 truncate">
+                        {service.businessName || service.categoryName}
+                      </p>
+                      <div className="flex items-center gap-1 mt-1 text-xs">
+                        <span className="font-extrabold text-slate-800">
+                          {service.rating || 4.9}
+                        </span>
+                        <span className="text-amber-400">★</span>
+                        <span className="text-[11px] text-slate-400">
+                          ({service.reviewCount || 120} reviews)
+                        </span>
+                      </div>
+                      <div className="mt-1 font-bold text-xs text-[#0f172a]">
+                        {service.price || "৳ 500 / Visit"}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-3 pt-0 flex items-center gap-2">
+                    <button
+                      onClick={(e) => handleCall(e, service.phone)}
+                      className="flex-1 py-2 px-3 rounded-full bg-[#fef3c7] hover:bg-[#fde68a] text-slate-900 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Phone className="w-3.5 h-3.5" /> Call
+                    </button>
+                    <button
+                      onClick={(e) =>
+                        handleWhatsapp(e, service.whatsapp || service.phone, service.name)
+                      }
+                      className="flex-1 py-2 px-3 rounded-full bg-[#10b981] hover:bg-[#059669] text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-              No matching technicians found
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto mt-1 mb-6">
-              We couldn&apos;t find any service provider matching your current filters. Try
-              clearing the search query or selecting a different location.
-            </p>
-            <div className="flex justify-center gap-3">
-              <button
-                onClick={() => {
-                  setSearchQuery("");
-                  setSelectedCategory(null);
-                  setSelectedSubcategory(null);
-                  setRadiusFilter(null);
-                }}
-                className="px-4 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs cursor-pointer"
-              >
-                Reset All Filters
-              </button>
-              <button
-                onClick={onOpenLocationPicker}
-                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs cursor-pointer"
-              >
-                Change Location Area
-              </button>
+          )}
+
+          {/* Toggle All Services Button */}
+          <div className="text-center mt-8">
+            <button
+              onClick={() => setShowAllServices(!showAllServices)}
+              className="px-6 py-2.5 rounded-full border border-slate-300 hover:border-[#d49b1a] text-xs font-bold text-slate-700 hover:text-[#d49b1a] transition-all cursor-pointer"
+            >
+              {showAllServices
+                ? "Show Less"
+                : `Explore More Verified Services (+${services.length})`}
+            </button>
+          </div>
+        </div>
+
+        {/* ============================================================ */}
+        {/* 3. Bottom 4-Column Value Proposition Bar matching mockup */}
+        {/* ============================================================ */}
+        <div className="rounded-2xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
+            {/* Feature 1: Verified */}
+            <div className="flex items-center gap-3.5 pt-3 sm:pt-0 sm:px-3">
+              <div className="w-11 h-11 rounded-full bg-[#1e3a8a] text-white flex items-center justify-center shrink-0 shadow-sm">
+                <ShieldCheck className="w-5 h-5 stroke-[2.2]" />
+              </div>
+              <div>
+                <h4 className="text-xs font-extrabold text-[#0f172a] tracking-tight">
+                  100% Verified Professionals
+                </h4>
+                <p className="text-[11px] text-slate-400 font-medium">
+                  Background checked & reviewed
+                </p>
+              </div>
+            </div>
+
+            {/* Feature 2: Real-Time Location */}
+            <div className="flex items-center gap-3.5 pt-3 sm:pt-0 sm:px-3">
+              <div className="w-11 h-11 rounded-full bg-[#1e3a8a] text-white flex items-center justify-center shrink-0 shadow-sm">
+                <Navigation className="w-5 h-5 stroke-[2.2]" />
+              </div>
+              <div>
+                <h4 className="text-xs font-extrabold text-[#0f172a] tracking-tight">
+                  Real-Time Location
+                </h4>
+                <p className="text-[11px] text-slate-400 font-medium">
+                  Haversine based closest matching
+                </p>
+              </div>
+            </div>
+
+            {/* Feature 3: Direct Communication */}
+            <div className="flex items-center gap-3.5 pt-3 sm:pt-0 sm:px-3">
+              <div className="w-11 h-11 rounded-full bg-[#1e3a8a] text-white flex items-center justify-center shrink-0 shadow-sm">
+                <Headphones className="w-5 h-5 stroke-[2.2]" />
+              </div>
+              <div>
+                <h4 className="text-xs font-extrabold text-[#0f172a] tracking-tight">
+                  Direct Communication
+                </h4>
+                <p className="text-[11px] text-slate-400 font-medium">
+                  Call or WhatsApp — no middleman
+                </p>
+              </div>
+            </div>
+
+            {/* Feature 4: Support */}
+            <div className="flex items-center gap-3.5 pt-3 sm:pt-0 sm:px-3">
+              <div className="w-11 h-11 rounded-full bg-[#1e3a8a] text-white flex items-center justify-center shrink-0 shadow-sm">
+                <Heart className="w-5 h-5 stroke-[2.2]" />
+              </div>
+              <div>
+                <h4 className="text-xs font-extrabold text-[#0f172a] tracking-tight">
+                  Support When You Need
+                </h4>
+                <p className="text-[11px] text-slate-400 font-medium">
+                  24/7 customer support
+                </p>
+              </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Full Service Detail Modal */}
+      {/* Modal with Leaflet Map when any card is clicked */}
       <ServiceDetailModal
         service={selectedService}
         userLocation={userLocation}
