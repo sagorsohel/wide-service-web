@@ -341,15 +341,17 @@ export default function ServicesPage() {
                           )}
                           <span className="truncate">{cat.name}</span>
                         </div>
-                        <span
-                          className={`text-[11px] px-2.5 py-0.5 rounded-lg transition-colors ${
-                            isActive
-                              ? "bg-[#fde68a] text-[#78350f] font-bold"
-                              : "text-slate-400 font-normal"
-                          }`}
-                        >
-                          {cat.slug === "all" ? cat.count : "Active"}
-                        </span>
+                        {cat.slug === "all" ? (
+                          <span className="text-[11px] px-2 py-0.5 rounded-md bg-amber-500/15 text-[#92400e] font-bold">
+                            {cat.count}
+                          </span>
+                        ) : (
+                          <ChevronRight
+                            className={`w-3.5 h-3.5 transition-transform duration-200 shrink-0 ${
+                              isActive ? "rotate-90 text-[#92400e]" : "text-slate-400"
+                            }`}
+                          />
+                        )}
                       </Link>
                     );
                   })}

@@ -44,7 +44,6 @@ function SingleCategoryContent() {
   const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
   const [selectedSubcategory, setSelectedSubcategory] =
     useState("All Subcategories");
-  const [selectedPriceRange, setSelectedPriceRange] = useState("Any Price");
   const [searchQuery, setSearchQuery] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
   const [sortBy, setSortBy] = useState("nearest");
@@ -339,15 +338,13 @@ function SingleCategoryContent() {
         {/* 1. Category Hero with Breadcrumbs & Badges */}
         <CategoryHero category={activeCategory} />
 
-        {/* 2. Subcategory, Price & Search Filter Bar */}
+        {/* 2. Subcategory & Search Filter Bar (No Price) */}
         <CategoryFilterBar
           userLocation={userLocation}
           onOpenLocationPicker={() => setIsLocationPickerOpen(true)}
           subcategories={subcategoryOptions}
           selectedSubcategory={selectedSubcategory}
           onSelectSubcategory={setSelectedSubcategory}
-          selectedPriceRange={selectedPriceRange}
-          onSelectPriceRange={setSelectedPriceRange}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onPerformSearch={() => setAppliedSearch(searchQuery)}
@@ -362,48 +359,93 @@ function SingleCategoryContent() {
               {/* All Categories List */}
               <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs">
                 <h3 className="text-sm font-extrabold text-[#0f172a] mb-4 tracking-tight flex items-center justify-between">
-                  <span>All Categories</span>
+                  <span>Categories</span>
                   <span className="text-[11px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
                     {dynamicCategories.length} Total
                   </span>
                 </h3>
 
-                <div className="space-y-1 max-h-[460px] overflow-y-auto pr-1">
+                <div className="space-y-1 max-h-[500px] overflow-y-auto pr-1">
                   {dynamicCategories.map((cat) => {
                     const isActive = activeCategory.slug === cat.slug;
                     return (
-                      <Link
-                        key={cat.slug}
-                        href={`/services/${cat.slug}`}
-                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs transition-all cursor-pointer ${
-                          isActive
-                            ? "bg-[#fef9c3] text-[#92400e] border border-[#fde68a] font-bold shadow-2xs"
-                            : "hover:bg-slate-50 text-slate-700 font-semibold"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          {cat.image ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={cat.image}
-                              alt={cat.name}
-                              className="w-5 h-5 object-contain shrink-0"
-                            />
-                          ) : (
-                            <span className="text-sm shrink-0">{cat.icon}</span>
-                          )}
-                          <span className="truncate">{cat.name}</span>
-                        </div>
-                        <span
-                          className={`text-[11px] px-2.5 py-0.5 rounded-lg transition-colors ${
+                      <div key={cat.slug} className="space-y-1">
+                        <Link
+                          href={`/services/${cat.slug}`}
+                          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs transition-all cursor-pointer ${
                             isActive
-                              ? "bg-[#fde68a] text-[#78350f] font-bold"
-                              : "text-slate-400 font-normal"
+                              ? "bg-[#fef9c3] text-[#92400e] border border-[#fde68a] font-bold shadow-2xs"
+                              : "hover:bg-slate-50 text-slate-700 font-semibold"
                           }`}
                         >
-                          Active
-                        </span>
-                      </Link>
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            {cat.image ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={cat.image}
+                                alt={cat.name}
+                                className="w-5 h-5 object-contain shrink-0"
+                              />
+                            ) : (
+                              <span className="text-sm shrink-0">{cat.icon}</span>
+                            )}
+                            <span className="truncate">{cat.name}</span>
+                          </div>
+                          <ChevronRight
+                            className={`w-3.5 h-3.5 transition-transform duration-200 shrink-0 ${
+                              isActive ? "rotate-90 text-[#92400e]" : "text-slate-400"
+                            }`}
+                          />
+                        </Link>
+
+                        {/* Tree Design Subcategories when active */}
+                        {isActive && liveSubcategories && liveSubcategories.length > 0 && (
+                          <div className="ml-5 pl-3 py-1 space-y-1 border-l-2 border-amber-300 relative my-1 animate-in slide-in-from-top-1 duration-200">
+                            {/* All Subcategories Option */}
+                            <button
+                              type="button"
+                              onClick={() => setSelectedSubcategory("All Subcategories")}
+                              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-all text-left cursor-pointer ${
+                                selectedSubcategory === "All Subcategories"
+                                  ? "bg-amber-100/90 text-amber-950 font-extrabold shadow-2xs"
+                                  : "hover:bg-amber-50/60 text-slate-600 font-medium"
+                              }`}
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                              <span className="truncate">All {cat.name}</span>
+                            </button>
+
+                            {/* Subcategory items */}
+                            {liveSubcategories.map((sub) => {
+                              const isSubActive = selectedSubcategory === sub.name;
+                              return (
+                                <button
+                                  key={sub.id}
+                                  type="button"
+                                  onClick={() => setSelectedSubcategory(sub.name)}
+                                  className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-all text-left cursor-pointer ${
+                                    isSubActive
+                                      ? "bg-amber-100/90 text-amber-950 font-extrabold shadow-2xs"
+                                      : "hover:bg-amber-50/60 text-slate-600 font-medium"
+                                  }`}
+                                >
+                                  {sub.image ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img
+                                      src={sub.image}
+                                      alt={sub.name}
+                                      className="w-3.5 h-3.5 object-contain shrink-0 rounded-xs"
+                                    />
+                                  ) : (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0" />
+                                  )}
+                                  <span className="truncate">{sub.name}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
