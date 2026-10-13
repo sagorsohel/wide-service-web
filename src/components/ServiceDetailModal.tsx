@@ -199,7 +199,7 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
   return (
     <>
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-200"
+        className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
         onClick={onClose}
       >
         <div
@@ -210,7 +210,7 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
           <div className="bg-[#e0b328] px-5 pt-3.5 pb-3.5 flex items-center justify-between">
             <button
               onClick={onClose}
-              className="w-9 h-9 rounded-full bg-white/25 hover:bg-white/40 flex items-center justify-center text-slate-900 transition-colors cursor-pointer"
+              className="w-9 h-9 rounded-full bg-white/30 hover:bg-white/50 flex items-center justify-center text-slate-900 transition-colors cursor-pointer"
               title="Close"
             >
               <ChevronLeft className="w-5 h-5 text-slate-900" />
@@ -222,7 +222,7 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
 
             <button
               onClick={handleShare}
-              className="w-9 h-9 rounded-full bg-white/25 hover:bg-white/40 flex items-center justify-center text-slate-900 transition-colors cursor-pointer relative"
+              className="w-9 h-9 rounded-full bg-white/30 hover:bg-white/50 flex items-center justify-center text-slate-900 transition-colors cursor-pointer relative"
               title="Share"
             >
               <Share2 className="w-4 h-4 text-slate-900" />
@@ -234,15 +234,15 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
             </button>
           </div>
 
-          {/* Main Curvy Content Sheet (rounded-t-[30px]) */}
-          <div className="flex-1 bg-slate-50 dark:bg-slate-950 rounded-t-[28px] overflow-y-auto flex flex-col">
+          {/* Main Curvy Content Sheet - 100% Light Mode */}
+          <div className="flex-1 bg-[#f8fafc] rounded-t-[28px] overflow-y-auto flex flex-col">
             <div className="p-4 sm:p-5 space-y-4 flex-1">
               {/* 1. Provider Profile Card */}
-              <div className="w-full bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+              <div className="w-full bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs">
                 <div className="flex items-center gap-4">
                   {/* Profile Logo with ShieldCheck Verified Badge */}
                   <div className="relative shrink-0">
-                    <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl bg-amber-50 dark:bg-slate-800 border-2 border-amber-300 dark:border-amber-600/60 p-1.5 flex items-center justify-center shadow-xs overflow-hidden">
+                    <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl bg-amber-50 border-2 border-amber-300 p-1.5 flex items-center justify-center shadow-xs overflow-hidden">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={profileImageUri}
@@ -250,19 +250,19 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
                         className="w-full h-full object-cover rounded-xl"
                       />
                     </div>
-                    <div className="absolute -bottom-1 -right-1 bg-emerald-500 rounded-full p-1 border-2 border-white dark:border-slate-900 shadow-xs flex items-center justify-center">
+                    <div className="absolute -bottom-1 -right-1 bg-emerald-500 rounded-full p-1 border-2 border-white shadow-xs flex items-center justify-center">
                       <ShieldCheck className="w-3 h-3 text-white" />
                     </div>
                   </div>
 
                   {/* Identity Info */}
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight leading-snug">
+                    <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight leading-snug">
                       {service.name}
                     </h2>
 
                     {service.businessName && (
-                      <div className="text-xs font-bold text-amber-800 dark:text-amber-400 mt-0.5 truncate">
+                      <div className="text-xs font-bold text-amber-800 mt-0.5 truncate">
                         {service.businessName}
                       </div>
                     )}
@@ -270,17 +270,17 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
                     {/* Category & Subcategory Pills + Distance Badge */}
                     <div className="flex items-center flex-wrap gap-1.5 mt-2">
                       {service.categoryName && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
                           {service.categoryName}
                         </span>
                       )}
                       {service.subcategoryName && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                           {service.subcategoryName}
                         </span>
                       )}
                       {calculatedDistanceKm != null && (
-                        <span className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 px-2 py-0.5 rounded-full flex items-center gap-1 text-[10px] font-black text-emerald-700 dark:text-emerald-300">
+                        <span className="bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1 text-[10px] font-black text-emerald-700">
                           <Navigation className="w-2.5 h-2.5 text-emerald-600" />
                           <span>{formatDistance(calculatedDistanceKm)}</span>
                         </span>
@@ -306,59 +306,59 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 font-black text-xs sm:text-sm py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer"
+                  className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 font-black text-xs sm:text-sm py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer"
                 >
-                  <MessageSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <MessageSquare className="w-4 h-4 text-emerald-600" />
                   <span>WhatsApp</span>
                 </a>
               </div>
 
               {/* 3. Service Operating Schedule Section */}
-              <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+              <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs">
                 <div className="flex items-center gap-2.5 mb-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/50 flex items-center justify-center text-blue-600">
+                  <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
                     <Clock className="w-4 h-4" />
                   </div>
-                  <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-slate-100">
+                  <h4 className="text-xs sm:text-sm font-black text-slate-900">
                     Service Operating Schedule
                   </h4>
                 </div>
 
-                <div className="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800">
-                  <div className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 leading-snug">
+                <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/70">
+                  <div className="text-xs sm:text-sm font-bold text-slate-800 leading-snug">
                     {service.schedule ||
                       "Everyday: 9:00 AM - 9:00 PM (Emergency 24/7 Support)"}
                   </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                  <div className="text-[11px] text-slate-500 mt-1">
                     Operating hours may vary during holidays or emergency calls.
                   </div>
                 </div>
               </div>
 
               {/* 4. About Service Section */}
-              <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
-                <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-slate-100 tracking-tight mb-2">
+              <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs">
+                <h4 className="text-xs sm:text-sm font-black text-slate-900 tracking-tight mb-2">
                   About Service
                 </h4>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
+                <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-normal">
                   {service.description ||
                     "অভিজ্ঞ ও প্রশিক্ষিত কারিগর দ্বারা দ্রুত এবং নির্ভরযোগ্য সার্ভিস। আধুনিক সরঞ্জাম দিয়ে দ্রুত সমাধান ও কাজের পর ৭ দিনের ফ্রি সার্ভিস ওয়ারেন্টি।"}
                 </p>
               </div>
 
               {/* 5. Distance & Interactive Maps Section */}
-              <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-3">
+              <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/50 flex items-center justify-center text-amber-600">
+                    <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
                       <MapPin className="w-4 h-4" />
                     </div>
                     <div>
-                      <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-slate-100">
+                      <h4 className="text-xs sm:text-sm font-black text-slate-900">
                         Service Location & Map
                       </h4>
                       {calculatedDistanceKm != null && (
-                        <div className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
+                        <div className="text-[11px] font-bold text-emerald-700">
                           {formatDistance(calculatedDistanceKm)} from your current
                           location
                         </div>
@@ -367,19 +367,19 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
                   </div>
 
                   {calculatedDistanceKm != null && (
-                    <div className="bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 rounded-full text-xs font-black text-emerald-700 dark:text-emerald-300">
+                    <div className="bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full text-xs font-black text-emerald-700">
                       {calculatedDistanceKm.toFixed(1)} km
                     </div>
                   )}
                 </div>
 
                 {/* Physical Address Text */}
-                <div className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                <div className="text-xs text-slate-700 font-medium leading-relaxed">
                   {service.address}
                 </div>
 
                 {/* Embedded Interactive Map Preview */}
-                <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 relative">
+                <div className="rounded-2xl overflow-hidden border border-slate-200 relative">
                   <ServiceMapEmbed
                     serviceLat={serviceLat}
                     serviceLng={serviceLng}
@@ -393,7 +393,7 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
                   <button
                     type="button"
                     onClick={handleOpenMaps}
-                    className="absolute bottom-2.5 right-2.5 bg-slate-900/90 hover:bg-slate-900 text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-xs font-bold shadow-md cursor-pointer transition-all"
+                    className="absolute bottom-2.5 right-2.5 bg-slate-900 hover:bg-black text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-xs font-bold shadow-md cursor-pointer transition-all"
                   >
                     <Compass className="w-3.5 h-3.5" />
                     <span>Full Map</span>
@@ -413,16 +413,16 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
               </div>
 
               {/* 6. Direct Contact Hotline Row */}
-              <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-2xs flex items-center justify-between">
+              <div className="bg-white rounded-3xl p-4 border border-slate-200/90 shadow-2xs flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-600">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
                     <Phone className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="text-[11px] font-bold text-slate-400">
+                    <div className="text-[11px] font-bold text-slate-500">
                       Direct Contact Hotline
                     </div>
-                    <div className="text-xs sm:text-sm font-black text-emerald-700 dark:text-emerald-400 font-mono mt-0.5">
+                    <div className="text-xs sm:text-sm font-black text-emerald-700 font-mono mt-0.5">
                       {service.phone}
                     </div>
                   </div>
@@ -438,21 +438,21 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
               </div>
 
               {/* 7. Services Images Gallery */}
-              <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-3">
+              <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Images className="w-4 h-4 text-[#0284c7]" />
-                    <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-slate-100">
+                    <h4 className="text-xs sm:text-sm font-black text-slate-900">
                       Services Images ({galleryImages.length})
                     </h4>
                   </div>
-                  <span className="text-[11px] font-bold text-slate-400">
+                  <span className="text-[11px] font-bold text-slate-500">
                     {activeImageIndex + 1} of {galleryImages.length}
                   </span>
                 </div>
 
                 {/* Main Active Showcase Photo */}
-                <div className="relative w-full h-56 sm:h-64 rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 group">
+                <div className="relative w-full h-56 sm:h-64 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 group">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={galleryImages[activeImageIndex]}
@@ -492,7 +492,7 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
                           className={`h-2 rounded-full transition-all ${
                             idx === activeImageIndex
                               ? "w-5 bg-amber-400"
-                              : "w-2 bg-white/60"
+                              : "w-2 bg-white/70"
                           }`}
                         />
                       ))}
@@ -503,7 +503,7 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsFullscreenModalOpen(true)}
-                    className="absolute top-2.5 right-2.5 bg-slate-900/80 hover:bg-slate-900 backdrop-blur-md px-2.5 py-1.5 rounded-xl flex items-center gap-1 text-[11px] font-bold text-white border border-white/10 cursor-pointer transition-all"
+                    className="absolute top-2.5 right-2.5 bg-slate-900/80 hover:bg-slate-900 text-white backdrop-blur-md px-2.5 py-1.5 rounded-xl flex items-center gap-1 text-[11px] font-bold border border-white/10 cursor-pointer transition-all"
                   >
                     <Maximize2 className="w-3 h-3 text-white" />
                     <span>Full View</span>
@@ -523,7 +523,7 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
                           className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
                             isSelected
                               ? "border-amber-500 scale-102 shadow-md"
-                              : "border-slate-200 dark:border-slate-700 opacity-60 hover:opacity-100"
+                              : "border-slate-200 opacity-60 hover:opacity-100"
                           }`}
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -541,11 +541,11 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
             </div>
 
             {/* Floating Bottom Booking / Call Bar */}
-            <div className="sticky bottom-0 bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800 px-5 py-3.5 flex items-center justify-between shadow-xl gap-3">
+            <div className="sticky bottom-0 bg-white border-t border-slate-200/90 px-5 py-3.5 flex items-center justify-between shadow-xl gap-3">
               <button
                 type="button"
                 onClick={handleOpenMaps}
-                className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 flex items-center justify-center border border-slate-200 dark:border-slate-700 cursor-pointer shrink-0 transition-colors"
+                className="w-12 h-12 rounded-2xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center border border-slate-200 cursor-pointer shrink-0 transition-colors"
                 title="Directions in Google Maps"
               >
                 <Compass className="w-5 h-5 text-blue-600" />
