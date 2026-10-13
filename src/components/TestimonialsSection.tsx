@@ -8,7 +8,8 @@ export const TestimonialsSection: React.FC = () => {
     {
       name: "Farhana Akter",
       location: "Dhaka, Bangladesh",
-      avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=240&auto=format&fit=crop&q=80",
+      avatar:
+        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=240&auto=format&fit=crop&q=80",
       rating: 5,
       quote:
         '"Great service! The AC technician was on time, professional and fixed the problem quickly. Highly recommended!"',
@@ -16,7 +17,8 @@ export const TestimonialsSection: React.FC = () => {
     {
       name: "Rahim Uddin",
       location: "Dhaka, Bangladesh",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=240&auto=format&fit=crop&q=80",
+      avatar:
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=240&auto=format&fit=crop&q=80",
       rating: 5,
       quote:
         '"Very good experience. The plumber was skilled and finished the work neatly. Will definitely use again."',
@@ -24,7 +26,8 @@ export const TestimonialsSection: React.FC = () => {
     {
       name: "Nusrat Jahan",
       location: "Dhaka, Bangladesh",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=240&auto=format&fit=crop&q=80",
+      avatar:
+        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=240&auto=format&fit=crop&q=80",
       rating: 5,
       quote:
         '"Easy to book, fast response and reasonable price. Really happy with the service!"',
@@ -38,10 +41,6 @@ export const TestimonialsSection: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
           <div>
             {/* Pill Badge matching Image 1 */}
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fef3c7] border border-[#fde68a] text-slate-800 text-xs font-semibold mb-3">
-              <span className="text-[#d49b1a] text-xs">⚡</span>
-              <span>What Our Customers Say</span>
-            </div>
 
             {/* Title */}
             <h2 className="text-3xl sm:text-4xl font-black text-[#0f172a] tracking-tight">
@@ -50,7 +49,8 @@ export const TestimonialsSection: React.FC = () => {
 
             {/* Subtitle */}
             <p className="text-sm sm:text-[15px] text-slate-500 mt-2 font-normal">
-              Trusted by homeowners across Dhaka for reliable and professional services.
+              Trusted by homeowners across Dhaka for reliable and professional
+              services.
             </p>
           </div>
 
@@ -93,7 +93,10 @@ export const TestimonialsSection: React.FC = () => {
                   {/* 5 Golden Stars */}
                   <div className="flex items-center gap-0.5 text-[#f59e0b] mb-2.5">
                     {[...Array(rev.rating)].map((_, i) => (
-                      <Star key={i} className="w-3.5 h-3.5 fill-[#f59e0b] text-[#f59e0b]" />
+                      <Star
+                        key={i}
+                        className="w-3.5 h-3.5 fill-[#f59e0b] text-[#f59e0b]"
+                      />
                     ))}
                   </div>
 
@@ -120,4 +123,3 @@ export const TestimonialsSection: React.FC = () => {
     </section>
   );
 };
-

@@ -52,16 +52,15 @@ export const HowItWorks: React.FC<HowItWorksProps> = ({
   };
 
   return (
-    <section id={id} className="py-16 sm:py-20 bg-white border-b border-slate-100">
+    <section
+      id={id}
+      className="py-16 sm:py-20 bg-white border-b border-slate-100"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
           {/* Left Column: Heading, Subtitle & Get Started CTA (4 cols) */}
           <div className="lg:col-span-4 space-y-4">
             {/* Pill Badge matching Master Mockup */}
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fef3c7] border border-[#fde68a] text-slate-800 text-xs font-semibold">
-              <span className="text-[#d49b1a] text-xs">⚡</span>
-              <span>{pill}</span>
-            </div>
 
             {/* Heading */}
             <h2 className="text-3xl sm:text-4xl font-black text-[#0f172a] tracking-tight leading-tight">

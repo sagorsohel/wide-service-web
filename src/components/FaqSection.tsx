@@ -39,17 +39,13 @@ export const FaqSection: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           {/* Left Column: Heading & Subtitle (4.5 cols) */}
           <div className="lg:col-span-5 space-y-4">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fef3c7] border border-[#fde68a] text-slate-800 text-xs font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#d49b1a]" />
-              <span>FAQ</span>
-            </div>
-
             <h2 className="text-3xl sm:text-4xl font-black text-[#0f172a] tracking-tight leading-tight">
               Frequently Asked Questions
             </h2>
 
             <p className="text-sm sm:text-[15px] text-slate-500 leading-relaxed font-normal">
-              Find answers to common questions about our services, booking process and more.
+              Find answers to common questions about our services, booking
+              process and more.
             </p>
           </div>
 
@@ -68,7 +64,11 @@ export const FaqSection: React.FC = () => {
                   >
                     <span>{faq.q}</span>
                     <span className="text-slate-400 text-base font-light shrink-0">
-                      {isOpen ? <Minus className="w-4 h-4 text-[#d49b1a]" /> : <Plus className="w-4 h-4" />}
+                      {isOpen ? (
+                        <Minus className="w-4 h-4 text-[#d49b1a]" />
+                      ) : (
+                        <Plus className="w-4 h-4" />
+                      )}
                     </span>
                   </button>
 
