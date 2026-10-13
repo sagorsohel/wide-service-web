@@ -79,8 +79,8 @@ export const Header: React.FC<HeaderProps> = ({
               { name: "Home", href: "/" },
               { name: "Services", href: "/services" },
               { name: "How It Works", href: "/#how-it-works" },
-              { name: "About", href: "/#download" },
-              { name: "Contact", href: "/#download" },
+              { name: "About", href: "/about" },
+              { name: "Contact", href: "/contact" },
             ].map((item) => {
               const isActive = (activeNav || currentNav) === item.name;
               return (
@@ -176,17 +176,21 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
 
           <nav className="flex flex-col space-y-2 text-sm font-semibold text-slate-700">
-            {["Home", "Services", "How It Works", "About", "Contact"].map((nav) => (
-              <button
-                key={nav}
-                onClick={() => {
-                  handleNav(nav);
-                  setMobileMenuOpen(false);
-                }}
-                className="text-left p-2.5 hover:bg-slate-50 rounded-xl"
+            {[
+              { name: "Home", href: "/" },
+              { name: "Services", href: "/services" },
+              { name: "How It Works", href: "/#how-it-works" },
+              { name: "About", href: "/about" },
+              { name: "Contact", href: "/contact" },
+            ].map((item) => (
+              <a
+                key={item.name}
+                href={item.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-left p-2.5 hover:bg-slate-50 rounded-xl block font-medium"
               >
-                {nav}
-              </button>
+                {item.name}
+              </a>
             ))}
           </nav>
 

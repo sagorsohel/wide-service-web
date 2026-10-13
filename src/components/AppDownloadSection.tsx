@@ -11,6 +11,10 @@ import {
   Camera,
   Download,
   Share2,
+  Home,
+  Settings,
+  Search,
+  Bell,
 } from "lucide-react";
 
 export const AppDownloadSection: React.FC = () => {
@@ -125,83 +129,232 @@ export const AppDownloadSection: React.FC = () => {
                 </div>
               </div>
 
-              {/* Front Phone: Wide Service App Screen */}
-              <div className="absolute left-0 top-0 w-[220px] sm:w-[250px] rounded-[38px] p-2.5 bg-gradient-to-b from-slate-600 via-slate-800 to-slate-950 border-3 border-slate-500 shadow-2xl z-10">
-                {/* Screen */}
-                <div className="rounded-[32px] overflow-hidden bg-[#0f172a] text-white aspect-[9/18.5] flex flex-col">
-                  {/* Top status bar & notch */}
-                  <div className="px-4 pt-2 pb-1 flex items-center justify-between text-[9px] text-slate-400">
-                    <span>9:41</span>
-                    <div className="w-16 h-3 rounded-full bg-slate-950" />
-                    <span>5G 🔋</span>
-                  </div>
+              {/* Front Phone: Pixel-Perfect Wide Service Native App Mockup in Pure Code */}
+              <div className="absolute left-0 top-0 w-[240px] sm:w-[270px] rounded-[42px] p-2 bg-gradient-to-b from-slate-300 via-slate-400 to-slate-600 border border-slate-200/90 shadow-[0_25px_45px_rgba(0,0,0,0.6)] z-10 transition-transform duration-300 hover:scale-102">
+                {/* Metallic Bezel Buttons on Chassis */}
+                <div className="absolute -left-[3px] top-20 w-[3px] h-8 bg-slate-400 rounded-l-sm" />
+                <div className="absolute -left-[3px] top-32 w-[3px] h-8 bg-slate-400 rounded-l-sm" />
+                <div className="absolute -right-[3px] top-24 w-[3px] h-12 bg-slate-400 rounded-r-sm" />
 
-                  {/* App Header with Logo matching screenshot */}
-                  <div className="px-4 py-3 text-center border-b border-slate-800/80">
-                    <div className="w-7 h-7 mx-auto rounded-full bg-[#d49b1a] flex items-center justify-center text-slate-950 text-xs font-bold mb-1 shadow-xs">
-                      📍
+                {/* Inner Screen */}
+                <div className="rounded-[34px] overflow-hidden bg-[#f8fafc] text-slate-900 flex flex-col relative border-2 border-slate-900 shadow-inner">
+                  {/* 1. iOS Status Bar with Dynamic Island */}
+                  <div className="bg-[#e0b328] px-4 pt-2 pb-1 flex items-center justify-between text-[8px] font-bold text-slate-950">
+                    <span>0:42</span>
+                    {/* Dynamic Island Pill */}
+                    <div className="w-16 h-3.5 rounded-full bg-black flex items-center justify-end pr-1.5 shadow-xs">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#1e293b]" />
                     </div>
-                    <div className="text-xs font-black text-white tracking-tight">
-                      Wide Service
-                    </div>
-                    <div className="text-[8px] font-semibold text-[#d49b1a] tracking-wider">
-                      Trusted Local Technicians
-                    </div>
-                  </div>
-
-                  {/* Search bar inside phone */}
-                  <div className="px-3.5 my-2">
-                    <div className="py-1.5 px-2.5 rounded-xl bg-slate-800/90 border border-slate-700/80 text-[9px] text-slate-400 flex items-center gap-1.5">
-                      <span>🔍</span>
-                      <span>Search service...</span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-[7px]">ııl</span>
+                      <span className="text-[7px]">ᯤ</span>
+                      <span className="text-[8px]">🔋</span>
                     </div>
                   </div>
 
-                  {/* 6 Category Icons inside phone matching screenshot */}
-                  <div className="px-3.5 flex-1 grid grid-cols-3 gap-2">
-                    <div className="rounded-xl bg-slate-800/80 border border-slate-700 p-1.5 flex flex-col items-center justify-center text-center">
-                      <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-[10px] mb-1">
-                        ❄️
+                  {/* 2. Golden Header: My Location Area */}
+                  <div className="bg-[#e0b328] px-3.5 pt-0.5 pb-2.5 text-slate-950 flex items-center justify-between">
+                    <div>
+                      <span className="text-[7.5px] font-black uppercase tracking-wider text-amber-950/70 block leading-tight">
+                        MY LOCATION AREA
+                      </span>
+                      <div className="flex items-center gap-1 text-[11px] font-black text-slate-950 leading-tight">
+                        <span>Shaheb Bazar, Rajshahi</span>
+                        <span className="text-[9px]">▾</span>
                       </div>
-                      <span className="text-[8px] font-bold text-slate-200">AC Repair</span>
                     </div>
-                    <div className="rounded-xl bg-slate-800/80 border border-slate-700 p-1.5 flex flex-col items-center justify-center text-center">
-                      <div className="w-6 h-6 rounded-full bg-teal-500 flex items-center justify-center text-[10px] mb-1">
-                        💧
-                      </div>
-                      <span className="text-[8px] font-bold text-slate-200">Plumbing</span>
-                    </div>
-                    <div className="rounded-xl bg-slate-800/80 border border-slate-700 p-1.5 flex flex-col items-center justify-center text-center">
-                      <div className="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center text-[10px] mb-1">
-                        ⚡
-                      </div>
-                      <span className="text-[8px] font-bold text-slate-200">Cleaning</span>
-                    </div>
-                    <div className="rounded-xl bg-slate-800/80 border border-slate-700 p-1.5 flex flex-col items-center justify-center text-center">
-                      <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-[10px] mb-1">
-                        🧹
-                      </div>
-                      <span className="text-[8px] font-bold text-slate-200">Electricity</span>
-                    </div>
-                    <div className="rounded-xl bg-slate-800/80 border border-slate-700 p-1.5 flex flex-col items-center justify-center text-center">
-                      <div className="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center text-[10px] mb-1">
-                        🔨
-                      </div>
-                      <span className="text-[8px] font-bold text-slate-200">Carpentry</span>
-                    </div>
-                    <div className="rounded-xl bg-slate-800/80 border border-slate-700 p-1.5 flex flex-col items-center justify-center text-center">
-                      <div className="w-6 h-6 rounded-full bg-rose-500 flex items-center justify-center text-[10px] mb-1">
-                        📹
-                      </div>
-                      <span className="text-[8px] font-bold text-slate-200">CCTV</span>
+
+                    {/* Notification Bell with Red Dot */}
+                    <div className="w-6 h-6 rounded-full bg-slate-950/10 flex items-center justify-center relative shadow-2xs">
+                      <Bell className="w-3.5 h-3.5 text-slate-950" />
+                      <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-600" />
                     </div>
                   </div>
 
-                  {/* Bottom bar inside phone */}
-                  <div className="p-2 bg-slate-950 border-t border-slate-800 flex items-center justify-around text-[8px] text-slate-400">
-                    <span className="text-[#d49b1a] font-bold">🏠 Home</span>
-                    <span>📑 Orders</span>
-                    <span>⚙️ Account</span>
+                  {/* 3. Search Bar */}
+                  <div className="px-3 my-2">
+                    <div className="bg-white rounded-full px-2.5 py-1.5 flex items-center gap-1.5 border border-slate-200/90 shadow-2xs">
+                      <Search className="w-3 h-3 text-slate-400 shrink-0" />
+                      <span className="text-[8px] text-slate-400 font-medium">
+                        Search category or service...
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 4. Promo Banner Card */}
+                  <div className="px-3 mb-2.5">
+                    <div className="bg-[#101b33] rounded-xl p-2 flex items-center justify-between border border-slate-800 shadow-xs">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-[10px] shrink-0">
+                          📲
+                        </div>
+                        <div>
+                          <div className="text-[8px] font-black text-[#e0b328] leading-tight">
+                            Wide Service Mobile App
+                          </div>
+                          <div className="text-[6.5px] text-slate-400 leading-tight">
+                            Direct GPS radar & 1-tap call
+                          </div>
+                        </div>
+                      </div>
+                      <span className="bg-[#e0b328] text-slate-950 text-[7px] font-black px-2 py-0.5 rounded-full shadow-2xs">
+                        Get App
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 5. Popular Categories Section Header */}
+                  <div className="px-3 mb-1.5 flex items-center justify-between">
+                    <span className="text-[8px] font-black text-slate-900 uppercase tracking-tight">
+                      POPULAR CATEGORIES
+                    </span>
+                    <span className="text-[7px] font-bold text-slate-400">
+                      31 Categories
+                    </span>
+                  </div>
+
+                  {/* 6. Exact 2-Column Categories Grid (8 Cards matching screenshot) */}
+                  <div className="px-3 grid grid-cols-2 gap-1.5 mb-2.5">
+                    {/* 1. Gas */}
+                    <div className="bg-white rounded-xl p-1.5 border border-slate-200/80 shadow-2xs flex flex-col items-center justify-center text-center gap-1">
+                      <div className="w-7 h-7 flex items-center justify-center">
+                        <svg viewBox="0 0 32 32" className="w-5 h-5" fill="none">
+                          <rect x="9" y="8" width="14" height="19" rx="4" fill="#38bdf8" />
+                          <rect x="11" y="5" width="10" height="3" rx="1.5" fill="#0284c7" />
+                          <rect x="13" y="3" width="6" height="2" rx="1" fill="#0369a1" />
+                          <path d="M16 13c0 2-2 3-2 5a3 3 0 0 0 6 0c0-2.5-2.5-3.5-2.5-5 0-1 0.5-2 1-2.5-2 0.5-2.5 1.5-2.5 2.5z" fill="#ffffff" />
+                          <circle cx="7" cy="11" r="1" fill="#38bdf8" />
+                          <circle cx="25" cy="15" r="1" fill="#38bdf8" />
+                        </svg>
+                      </div>
+                      <span className="text-[7.5px] font-bold text-slate-800 leading-tight">
+                        Gas
+                      </span>
+                    </div>
+
+                    {/* 2. AC & Cooling Repair */}
+                    <div className="bg-white rounded-xl p-1.5 border border-slate-200/80 shadow-2xs flex flex-col items-center justify-center text-center gap-1">
+                      <div className="w-7 h-7 flex items-center justify-center">
+                        <svg viewBox="0 0 32 32" className="w-6 h-6" fill="none">
+                          <rect x="4" y="8" width="24" height="11" rx="2" fill="#38bdf8" />
+                          <rect x="6" y="15" width="20" height="2" rx="1" fill="#0284c7" />
+                          <circle cx="24" cy="11" r="1" fill="#ffffff" />
+                          <path d="M8 22c0 2 1.5 3 1.5 4M12 22c0 2 1.5 3 1.5 4M16 22c0 2 1.5 3 1.5 4M20 22c0 2 1.5 3 1.5 4" stroke="#38bdf8" strokeWidth="1.5" strokeLinecap="round" />
+                        </svg>
+                      </div>
+                      <span className="text-[7.5px] font-bold text-slate-800 leading-tight">
+                        AC & Cooling Repair
+                      </span>
+                    </div>
+
+                    {/* 3. Plumbing Services */}
+                    <div className="bg-white rounded-xl p-1.5 border border-slate-200/80 shadow-2xs flex flex-col items-center justify-center text-center gap-1">
+                      <div className="w-7 h-7 flex items-center justify-center">
+                        <svg viewBox="0 0 32 32" className="w-6 h-6" fill="none">
+                          <path d="M7 14h5v-3a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v7h4v4h-6v-3h-2v4h-4v-4H7v-5z" fill="#38bdf8" />
+                          <rect x="13" y="5" width="4" height="3" rx="1" fill="#0284c7" />
+                          <path d="M19 24c0 1.6-1.3 3-3 3s-3-1.4-3-3c0-1.8 3-5 3-5s3 3.2 3 5z" fill="#0284c7" />
+                        </svg>
+                      </div>
+                      <span className="text-[7.5px] font-bold text-slate-800 leading-tight">
+                        Plumbing Services
+                      </span>
+                    </div>
+
+                    {/* 4. Electrical & Wiring */}
+                    <div className="bg-white rounded-xl p-1.5 border border-slate-200/80 shadow-2xs flex flex-col items-center justify-center text-center gap-1">
+                      <div className="w-7 h-7 flex items-center justify-center">
+                        <svg viewBox="0 0 32 32" className="w-5 h-5" fill="none">
+                          <path d="M18 10l4 4-6 6-4-4 6-6z" fill="#94a3b8" />
+                          <path d="M19 7l2 2M23 11l2 2" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" />
+                          <path d="M12 16l-4 4c-1.5 1.5-1 3.5 1 5l1 1" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" />
+                        </svg>
+                      </div>
+                      <span className="text-[7.5px] font-bold text-slate-800 leading-tight">
+                        Electrical & Wiring
+                      </span>
+                    </div>
+
+                    {/* 5. House Cleaning */}
+                    <div className="bg-white rounded-xl p-1.5 border border-slate-200/80 shadow-2xs flex flex-col items-center justify-center text-center gap-1">
+                      <div className="w-7 h-7 flex items-center justify-center">
+                        <svg viewBox="0 0 32 32" className="w-5 h-5" fill="none">
+                          <rect x="6" y="6" width="20" height="20" rx="4" fill="#38bdf8" />
+                          <path d="M11 11l8 8M19 11l-3 3 5 5 3-3-5-5z" fill="#0f172a" />
+                          <path d="M12 10l-2 2 8 8 2-2-8-8z" fill="#0284c7" />
+                        </svg>
+                      </div>
+                      <span className="text-[7.5px] font-bold text-slate-800 leading-tight">
+                        House Cleaning
+                      </span>
+                    </div>
+
+                    {/* 6. Appliance Repair */}
+                    <div className="bg-white rounded-xl p-1.5 border border-slate-200/80 shadow-2xs flex flex-col items-center justify-center text-center gap-1">
+                      <div className="w-7 h-7 flex items-center justify-center">
+                        <svg viewBox="0 0 32 32" className="w-5 h-5" fill="none">
+                          <rect x="7" y="5" width="18" height="22" rx="3" fill="#38bdf8" />
+                          <circle cx="16" cy="17" r="5.5" fill="#0284c7" />
+                          <circle cx="16" cy="17" r="3.5" fill="#0369a1" />
+                          <circle cx="11" cy="9" r="1.5" fill="#ffffff" />
+                          <line x1="16" y1="9" x2="21" y2="9" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" />
+                        </svg>
+                      </div>
+                      <span className="text-[7.5px] font-bold text-slate-800 leading-tight">
+                        Appliance Repair
+                      </span>
+                    </div>
+
+                    {/* 7. Painting & Renovation */}
+                    <div className="bg-white rounded-xl p-1.5 border border-slate-200/80 shadow-2xs flex flex-col items-center justify-center text-center gap-1">
+                      <div className="w-7 h-7 flex items-center justify-center">
+                        <svg viewBox="0 0 32 32" className="w-5 h-5" fill="none">
+                          <path d="M19 6l7 7-9 9-7-7 9-9z" fill="#334155" />
+                          <path d="M12 13l7 7-3 3-7-7 3-3z" fill="#94a3b8" />
+                          <path d="M9 16l7 7-6 6c-2 2-4 0-4 0s-2-2 0-4l3-3-4-6z" fill="#cbd5e1" />
+                        </svg>
+                      </div>
+                      <span className="text-[7.5px] font-bold text-slate-800 leading-tight">
+                        Painting & Renovation
+                      </span>
+                    </div>
+
+                    {/* 8. Carpentry & Woodwork */}
+                    <div className="bg-white rounded-xl p-1.5 border border-slate-200/80 shadow-2xs flex flex-col items-center justify-center text-center gap-1">
+                      <div className="w-7 h-7 flex items-center justify-center">
+                        <svg viewBox="0 0 32 32" className="w-5 h-5" fill="none">
+                          <path d="M10 22l14-14-3-3-15 15 4 2z" fill="#94a3b8" />
+                          <path d="M11 21l2-2 1 1-2 2-1-1zm3-3l2-2 1 1-2 2-1-1zm3-3l2-2 1 1-2 2-1-1z" fill="#64748b" />
+                          <path d="M8 20l-3 3c-1.5 1.5-1.5 4 0 5.5s4 1.5 5.5 0l3-3-5.5-5.5z" fill="#eab308" />
+                          <circle cx="8" cy="25" r="1.5" fill="#0f172a" />
+                        </svg>
+                      </div>
+                      <span className="text-[7.5px] font-bold text-slate-800 leading-tight">
+                        Carpentry & Woodwork
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 7. Bottom Navigation Bar */}
+                  <div className="bg-white/95 border-t border-slate-200/80 px-3 py-1.5 flex items-center justify-between">
+                    {/* Home Tab (Golden Highlighted Pill) */}
+                    <div className="flex-1 max-w-[100px] bg-[#e0b328]/20 border border-[#e0b328]/60 py-1 px-2.5 rounded-xl flex items-center justify-center gap-1 shadow-2xs">
+                      <Home className="w-3 h-3 text-amber-700 fill-amber-500/30" />
+                      <div className="flex flex-col items-center">
+                        <span className="text-[8px] font-black text-slate-950 leading-none">
+                          Home
+                        </span>
+                        <div className="w-3 h-[1.5px] bg-[#d49b1a] rounded-full mt-0.5" />
+                      </div>
+                    </div>
+
+                    {/* Settings Tab */}
+                    <div className="flex-1 max-w-[100px] py-1 px-2.5 flex items-center justify-center gap-1 text-slate-500">
+                      <Settings className="w-3 h-3 text-slate-400" />
+                      <span className="text-[8px] font-bold text-slate-600">
+                        Settings
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
