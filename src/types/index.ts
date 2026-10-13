@@ -1,0 +1,64 @@
+export interface Category {
+  id: number;
+  name: string;
+  image?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Subcategory {
+  id: number;
+  categoryId: number;
+  categoryName?: string | null;
+  name: string;
+  image?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Service {
+  id: number;
+  name: string;
+  businessName?: string | null;
+  schedule?: string | null;
+  logo?: string | null;
+  address: string;
+  phone: string;
+  whatsapp?: string | null;
+  images?: string[] | string;
+  categoryId: number;
+  categoryName?: string | null;
+  subcategoryId?: number | null;
+  subcategoryName?: string | null;
+  description?: string | null;
+  status: "active" | "inactive" | "pending" | "rejected";
+  price?: string;
+  rating?: number;
+  reviewCount?: number;
+  experience?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  distanceKm?: number | null;
+  userId?: number;
+  creatorName?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface UserLocation {
+  address: string;
+  area: string;
+  city: string;
+  latitude: number;
+  longitude: number;
+  isCurrentGps?: boolean;
+  updatedAt?: string;
+}
+
+export interface CityOption {
+  name: string;
+  area: string;
+  lat: number;
+  lng: number;
+  popular?: boolean;
+}
