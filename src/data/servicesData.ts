@@ -4,6 +4,7 @@ export interface ServiceCategoryMeta {
   slug: string;
   count: string;
   iconBg: string;
+  image?: string | null;
   backendCategoryId?: number;
   badgeText?: string;
   heroTitle?: string;
@@ -19,15 +20,38 @@ export const CATEGORIES_LIST: ServiceCategoryMeta[] = [
     slug: "all",
     count: "1,800+",
     iconBg: "bg-slate-700",
+    image: null,
     subcategories: ["All Subcategories"],
+  },
+  {
+    id: "gas",
+    name: "Gas",
+    slug: "gas",
+    backendCategoryId: 37,
+    count: "Active",
+    iconBg: "bg-[#ea580c]",
+    image: "https://image.streamespn.org/uploads/13384594-1791896052328-738067288.webp",
+    badgeText: "Gas Services",
+    heroTitle: "Gas & Stove Services",
+    heroSubtitle:
+      "Safe and certified domestic & commercial gas line repair, gas cylinder connection, burner maintenance, and safety inspections.",
+    heroTagline: "Safe Gas, Warm Home",
+    subcategories: [
+      "All Subcategories",
+      "Gas Stove Repair",
+      "Gas Line Leakage Fix",
+      "Cylinder Connection Setup",
+      "Burner Deep Clean",
+    ],
   },
   {
     id: "ac-repair",
     name: "AC Repair",
     slug: "ac-repair",
     backendCategoryId: 7,
-    count: "212",
+    count: "Active",
     iconBg: "bg-[#0284c7]",
+    image: "https://img.icons8.com/fluency/96/air-conditioner.png",
     badgeText: "AC Repair",
     heroTitle: "AC Repair",
     heroSubtitle:
@@ -47,8 +71,9 @@ export const CATEGORIES_LIST: ServiceCategoryMeta[] = [
     name: "Plumbing",
     slug: "plumbing",
     backendCategoryId: 8,
-    count: "248",
+    count: "Active",
     iconBg: "bg-[#0891b2]",
+    image: "https://img.icons8.com/fluency/96/plumbing.png",
     badgeText: "Plumbing",
     heroTitle: "Plumbing Services",
     heroSubtitle:
@@ -68,8 +93,9 @@ export const CATEGORIES_LIST: ServiceCategoryMeta[] = [
     name: "Electrical",
     slug: "electrical",
     backendCategoryId: 9,
-    count: "242",
+    count: "Active",
     iconBg: "bg-[#eab308]",
+    image: "https://img.icons8.com/fluency/96/electrical.png",
     badgeText: "Electrical",
     heroTitle: "Electrical Services",
     heroSubtitle:
@@ -89,8 +115,9 @@ export const CATEGORIES_LIST: ServiceCategoryMeta[] = [
     name: "Cleaning",
     slug: "cleaning",
     backendCategoryId: 10,
-    count: "198",
+    count: "Active",
     iconBg: "bg-[#059669]",
+    image: "https://img.icons8.com/fluency/96/cleaning-service.png",
     badgeText: "Cleaning",
     heroTitle: "Home & Office Cleaning",
     heroSubtitle:
@@ -110,8 +137,9 @@ export const CATEGORIES_LIST: ServiceCategoryMeta[] = [
     name: "Carpentry",
     slug: "carpentry",
     backendCategoryId: 13,
-    count: "176",
+    count: "Active",
     iconBg: "bg-[#9333ea]",
+    image: "https://img.icons8.com/fluency/96/saw.png",
     badgeText: "Carpentry",
     heroTitle: "Carpentry & Furniture",
     heroSubtitle:
@@ -130,8 +158,9 @@ export const CATEGORIES_LIST: ServiceCategoryMeta[] = [
     name: "CCTV",
     slug: "cctv",
     backendCategoryId: 16,
-    count: "143",
+    count: "Active",
     iconBg: "bg-[#e11d48]",
+    image: "https://img.icons8.com/fluency/96/webcam.png",
     badgeText: "CCTV",
     heroTitle: "CCTV & Security",
     heroSubtitle:
@@ -150,8 +179,9 @@ export const CATEGORIES_LIST: ServiceCategoryMeta[] = [
     name: "Appliances",
     slug: "appliances",
     backendCategoryId: 11,
-    count: "167",
+    count: "Active",
     iconBg: "bg-[#2563eb]",
+    image: "https://img.icons8.com/fluency/96/washing-machine.png",
     badgeText: "Appliances",
     heroTitle: "Home Appliance Repair",
     heroSubtitle:
@@ -166,21 +196,43 @@ export const CATEGORIES_LIST: ServiceCategoryMeta[] = [
     ],
   },
   {
+    id: "painting",
+    name: "Painting & Renovation",
+    slug: "painting-renovation",
+    backendCategoryId: 12,
+    count: "Active",
+    iconBg: "bg-[#f59e0b]",
+    image: "https://img.icons8.com/fluency/96/paint-brush.png",
+    badgeText: "Painting",
+    heroTitle: "Painting & Renovation Services",
+    heroSubtitle:
+      "High quality wall painting, damp proofing, and color consultation for residential and commercial spaces.",
+    heroTagline: "Colors That Transform Your Space",
+    subcategories: [
+      "All Subcategories",
+      "Interior Wall Painting",
+      "Exterior Weather Coat",
+      "Wood & Enamel Paint",
+      "Damp Proof Treatment",
+    ],
+  },
+  {
     id: "other",
     name: "Other",
     slug: "other",
-    backendCategoryId: 12,
-    count: "124",
+    backendCategoryId: 14,
+    count: "Active",
     iconBg: "bg-[#64748b]",
+    image: "https://img.icons8.com/fluency/96/van.png",
     badgeText: "Other",
     heroTitle: "More Specialized Services",
     heroSubtitle:
-      "Painting, welding, home shifting, masonry, and customized local handyman services all over Bangladesh.",
+      "Home shifting, welding, pest control, masonry, and customized local handyman services all over Bangladesh.",
     heroTagline: "Any Job, Done Right",
     subcategories: [
       "All Subcategories",
-      "Wall Painting & Renovation",
       "House Shifting & Moving",
+      "Pest Control Treatment",
       "Welding & Grill Work",
     ],
   },

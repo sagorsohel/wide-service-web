@@ -73,6 +73,7 @@ export default function ServicesPage() {
         slug: "all",
         count: totalCount > 0 ? `${totalCount}+` : "1,800+",
         icon: "⊞",
+        image: null as string | null | undefined,
         backendCategoryId: undefined as number | undefined,
       },
     ];
@@ -86,6 +87,7 @@ export default function ServicesPage() {
           slug: slugifyCategory(cat.name),
           count: "Active",
           icon: visuals.icon,
+          image: cat.image,
           backendCategoryId: cat.id,
         });
       });
@@ -96,8 +98,9 @@ export default function ServicesPage() {
       id: c.id,
       name: c.name,
       slug: c.slug,
-      count: c.count,
+      count: "Active",
       icon: c.slug === "ac-repair" ? "❄️" : c.slug === "plumbing" ? "💧" : "⚙️",
+      image: c.image,
       backendCategoryId: c.backendCategoryId,
     }));
   }, [categories, totalCount]);
@@ -321,22 +324,31 @@ export default function ServicesPage() {
                         }
                         className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs transition-all cursor-pointer ${
                           isActive
-                            ? "bg-[#fef3c7] text-[#92400e] border border-[#fde68a] font-bold shadow-2xs"
-                            : "hover:bg-slate-50 text-slate-700 font-medium"
+                            ? "bg-[#fef9c3] text-[#92400e] border border-[#fde68a] font-bold shadow-2xs"
+                            : "hover:bg-slate-50 text-slate-700 font-semibold"
                         }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <span className="text-sm shrink-0">{cat.icon}</span>
+                          {cat.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={cat.image}
+                              alt={cat.name}
+                              className="w-5 h-5 object-contain shrink-0"
+                            />
+                          ) : (
+                            <span className="text-sm shrink-0">{cat.icon}</span>
+                          )}
                           <span className="truncate">{cat.name}</span>
                         </div>
                         <span
-                          className={`text-[11px] px-2 py-0.5 rounded-md ${
+                          className={`text-[11px] px-2.5 py-0.5 rounded-lg transition-colors ${
                             isActive
-                              ? "bg-amber-500/20 text-[#92400e] font-extrabold"
+                              ? "bg-[#fde68a] text-[#78350f] font-bold"
                               : "text-slate-400 font-normal"
                           }`}
                         >
-                          {cat.count}
+                          {cat.slug === "all" ? cat.count : "Active"}
                         </span>
                       </Link>
                     );

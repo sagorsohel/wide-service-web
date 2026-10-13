@@ -47,9 +47,18 @@ export const CategoryHero: React.FC<CategoryHeroProps> = ({ category }) => {
             {/* Category Icon Badge */}
             <div className="flex items-center gap-3">
               <div
-                className={`w-12 h-12 rounded-2xl ${category.iconBg} text-white flex items-center justify-center shadow-lg border border-white/20 text-2xl`}
+                className={`w-12 h-12 rounded-2xl ${category.iconBg || "bg-amber-500"} p-2 text-white flex items-center justify-center shadow-lg border border-white/20 overflow-hidden shrink-0`}
               >
-                ❄️
+                {category.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={category.image}
+                    alt={category.name}
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <span className="text-xl">⚙️</span>
+                )}
               </div>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
                 {category.heroTitle || category.name}

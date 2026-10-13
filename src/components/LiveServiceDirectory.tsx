@@ -41,71 +41,71 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [showAllServices, setShowAllServices] = useState(false);
 
-  // Exact 8 Popular Categories matching the screenshot with navigation slugs
+  // Exact 8 Popular Categories matching the backend database with dynamic image icons
   const popularCategories = [
     {
-      id: "ac",
-      name: "AC Repair",
+      id: "37",
+      name: "Gas",
+      slug: "gas",
+      icon: "🔥",
+      bgColor: "bg-[#ea580c]",
+      image: "https://image.streamespn.org/uploads/13384594-1791896052328-738067288.webp",
+    },
+    {
+      id: "7",
+      name: "AC & Cooling Repair",
       slug: "ac-repair",
-      count: "512+ Services",
       icon: "❄️",
       bgColor: "bg-[#0284c7]",
+      image: "https://img.icons8.com/fluency/96/air-conditioner.png",
     },
     {
-      id: "plumbing",
-      name: "Plumbing",
+      id: "8",
+      name: "Plumbing Services",
       slug: "plumbing",
-      count: "420+ Services",
       icon: "💧",
       bgColor: "bg-[#0891b2]",
+      image: "https://img.icons8.com/fluency/96/plumbing.png",
     },
     {
-      id: "electrical",
-      name: "Electrical",
+      id: "9",
+      name: "Electrical & Wiring",
       slug: "electrical",
-      count: "389+ Services",
       icon: "⚡",
       bgColor: "bg-[#eab308]",
+      image: "https://img.icons8.com/fluency/96/electrical.png",
     },
     {
-      id: "cleaning",
-      name: "Cleaning",
-      slug: "cleaning",
-      count: "312+ Services",
+      id: "10",
+      name: "House Cleaning",
+      slug: "house-cleaning",
       icon: "🧹",
       bgColor: "bg-[#059669]",
+      image: "https://img.icons8.com/fluency/96/cleaning-service.png",
     },
     {
-      id: "carpentry",
-      name: "Carpentry",
-      slug: "carpentry",
-      count: "276+ Services",
-      icon: "🔨",
-      bgColor: "bg-[#9333ea]",
-    },
-    {
-      id: "cctv",
-      name: "CCTV",
-      slug: "cctv",
-      count: "198+ Services",
-      icon: "📹",
-      bgColor: "bg-[#e11d48]",
-    },
-    {
-      id: "appliances",
-      name: "Appliances",
-      slug: "appliances",
-      count: "167+ Services",
+      id: "11",
+      name: "Appliance Repair",
+      slug: "appliance-repair",
       icon: "🧺",
       bgColor: "bg-[#2563eb]",
+      image: "https://img.icons8.com/fluency/96/washing-machine.png",
     },
     {
-      id: "other",
-      name: "Other",
-      slug: "other",
-      count: "124+ Services",
-      icon: "⊞",
-      bgColor: "bg-[#64748b]",
+      id: "12",
+      name: "Painting & Renovation",
+      slug: "painting-renovation",
+      icon: "🎨",
+      bgColor: "bg-[#f59e0b]",
+      image: "https://img.icons8.com/fluency/96/paint-brush.png",
+    },
+    {
+      id: "13",
+      name: "Carpentry & Woodwork",
+      slug: "carpentry-woodwork",
+      icon: "🔨",
+      bgColor: "bg-[#9333ea]",
+      image: "https://img.icons8.com/fluency/96/saw.png",
     },
   ];
 
@@ -121,6 +121,7 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
           count: "",
           icon: visuals.icon,
           bgColor: visuals.bgColor,
+          image: cat.image,
         };
       });
     }
@@ -337,28 +338,44 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
 
           {/* 8-Card Grid matching mockup - Clicking navigates to Single Category page */}
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-3.5">
-            {dynamicCategories.map((cat) => {
+            {dynamicCategories.map((cat, idx) => {
+              const isFirst = idx === 0;
               return (
                 <Link
                   key={cat.id}
                   href={`/services/${cat.slug}`}
-                  className="bg-white rounded-[18px] border border-slate-200/90 hover:border-[#d49b1a] p-4 flex flex-col items-center justify-center text-center transition-all cursor-pointer hover:shadow-md hover:scale-102 group"
+                  className={`rounded-[18px] border p-3 sm:p-4 flex flex-col items-center justify-center text-center transition-all cursor-pointer hover:shadow-md hover:scale-102 group ${
+                    isFirst
+                      ? "bg-[#fffdf5] border-[#fde68a] hover:border-[#d49b1a] shadow-xs"
+                      : "bg-white border-slate-200/90 hover:border-[#d49b1a] shadow-2xs"
+                  }`}
                 >
                   {/* Colored Round Icon */}
                   <div
-                    className={`w-12 h-12 rounded-full ${cat.bgColor} flex items-center justify-center text-white text-xl mb-3 shadow-2xs group-hover:scale-105 transition-transform`}
+                    className={`w-12 h-12 rounded-full ${cat.bgColor} flex items-center justify-center p-2 mb-2 sm:mb-2.5 shadow-2xs group-hover:scale-105 transition-transform overflow-hidden`}
                   >
-                    {cat.icon}
+                    {cat.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={cat.image}
+                        alt={cat.name}
+                        className="w-7 h-7 object-contain"
+                      />
+                    ) : (
+                      <span className="text-white text-xl">{cat.icon}</span>
+                    )}
                   </div>
 
                   {/* Category Name */}
-                  <div className="text-xs font-black text-[#0f172a] group-hover:text-[#d49b1a] transition-colors leading-tight mb-1 truncate w-full">
+                  <div
+                    className={`text-xs font-black transition-colors leading-tight truncate w-full px-1 ${
+                      isFirst
+                        ? "text-[#b45309]"
+                        : "text-[#0f172a] group-hover:text-[#d49b1a]"
+                    }`}
+                    title={cat.name}
+                  >
                     {cat.name}
-                  </div>
-
-                  {/* Services Count */}
-                  <div className="text-[10px] font-medium text-slate-400">
-                    {cat.count}
                   </div>
                 </Link>
               );

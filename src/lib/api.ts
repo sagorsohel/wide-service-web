@@ -79,14 +79,16 @@ export function sortServicesByDistance(
 
 // Fallback Categories
 export const FALLBACK_CATEGORIES: Category[] = [
-  { id: 1, name: "AC Repair & Servicing", image: "https://img.icons8.com/fluency/96/air-conditioner.png" },
-  { id: 2, name: "Plumbing Services", image: "https://img.icons8.com/fluency/96/plumbing.png" },
-  { id: 3, name: "Electrical Wiring & Repair", image: "https://img.icons8.com/fluency/96/electrical.png" },
-  { id: 4, name: "Home Deep Cleaning", image: "https://img.icons8.com/fluency/96/cleaning-service.png" },
-  { id: 5, name: "Handcraft & Carpentry", image: "https://img.icons8.com/fluency/96/saw.png" },
-  { id: 6, name: "Shifting & House Moving", image: "https://img.icons8.com/fluency/96/van.png" },
-  { id: 7, name: "CCTV & Home Security", image: "https://img.icons8.com/fluency/96/webcam.png" },
-  { id: 8, name: "Computer & Laptop Repair", image: "https://img.icons8.com/fluency/96/laptop.png" },
+  { id: 37, name: "Gas", image: "https://image.streamespn.org/uploads/13384594-1791896052328-738067288.webp" },
+  { id: 7, name: "AC & Cooling Repair", image: "https://img.icons8.com/fluency/96/air-conditioner.png" },
+  { id: 8, name: "Plumbing Services", image: "https://img.icons8.com/fluency/96/plumbing.png" },
+  { id: 9, name: "Electrical & Wiring", image: "https://img.icons8.com/fluency/96/electrical.png" },
+  { id: 10, name: "House Cleaning", image: "https://img.icons8.com/fluency/96/cleaning-service.png" },
+  { id: 11, name: "Appliance Repair", image: "https://img.icons8.com/fluency/96/washing-machine.png" },
+  { id: 12, name: "Painting & Renovation", image: "https://img.icons8.com/fluency/96/paint-brush.png" },
+  { id: 13, name: "Carpentry & Woodwork", image: "https://img.icons8.com/fluency/96/saw.png" },
+  { id: 14, name: "Shifting & Moving", image: "https://img.icons8.com/fluency/96/van.png" },
+  { id: 15, name: "Pest Control", image: "https://img.icons8.com/fluency/96/insect.png" },
 ];
 
 // Fallback Services
