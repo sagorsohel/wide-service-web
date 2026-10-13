@@ -37,17 +37,9 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
   const [isFullscreenModalOpen, setIsFullscreenModalOpen] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
 
-  // If no service is selected, don't render
-  if (!service) return null;
-
-  // Profile Image URI
-  const profileImageUri =
-    service.logo ||
-    (Array.isArray(service.images) && service.images[0]) ||
-    "https://img.icons8.com/fluency/96/maintenance.png";
-
-  // Parse Gallery Images dynamically
+  // Parse Gallery Images dynamically - hooks called unconditionally
   const galleryImages: string[] = useMemo(() => {
+    if (!service) return [];
     const list: string[] = [];
     if (Array.isArray(service.images)) {
       list.push(
@@ -88,23 +80,11 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
     return [
       "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800",
     ];
-  }, [service.images, service.logo]);
+  }, [service?.images, service?.logo]);
 
-  // Image Navigation
-  const handleNextImage = () => {
-    if (galleryImages.length <= 1) return;
-    setActiveImageIndex((prev) => (prev + 1) % galleryImages.length);
-  };
-
-  const handlePrevImage = () => {
-    if (galleryImages.length <= 1) return;
-    setActiveImageIndex(
-      (prev) => (prev - 1 + galleryImages.length) % galleryImages.length
-    );
-  };
-
-  // Calculate live distance
+  // Calculate live distance - hooks called unconditionally
   const calculatedDistanceKm: number | null = useMemo(() => {
+    if (!service) return null;
     const sLat = service.latitude != null ? Number(service.latitude) : null;
     const sLng = service.longitude != null ? Number(service.longitude) : null;
     if (
@@ -129,10 +109,32 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
   }, [
     userLocation.latitude,
     userLocation.longitude,
-    service.latitude,
-    service.longitude,
-    service.distanceKm,
+    service?.latitude,
+    service?.longitude,
+    service?.distanceKm,
   ]);
+
+  // Image Navigation
+  const handleNextImage = () => {
+    if (galleryImages.length <= 1) return;
+    setActiveImageIndex((prev) => (prev + 1) % galleryImages.length);
+  };
+
+  const handlePrevImage = () => {
+    if (galleryImages.length <= 1) return;
+    setActiveImageIndex(
+      (prev) => (prev - 1 + galleryImages.length) % galleryImages.length
+    );
+  };
+
+  // If no service is selected, don't render UI (safely placed after all hooks)
+  if (!service) return null;
+
+  // Profile Image URI
+  const profileImageUri =
+    service.logo ||
+    (Array.isArray(service.images) && service.images[0]) ||
+    "https://img.icons8.com/fluency/96/maintenance.png";
 
   const cleanPhone = service.phone ? service.phone.replace(/[^0-9+]/g, "") : "";
   const cleanWhatsapp = service.whatsapp
