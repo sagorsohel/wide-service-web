@@ -6,8 +6,8 @@ import { DEFAULT_USER_LOCATION } from "../lib/cities";
 import { Header } from "../components/Header";
 import { HeroSection } from "../components/HeroSection";
 import { LiveServiceDirectory } from "../components/LiveServiceDirectory";
-import { SystemFeatures } from "../components/SystemFeatures";
 import { HowItWorks } from "../components/HowItWorks";
+import { WhyChooseUsSection } from "../components/WhyChooseUsSection";
 import { AppDownloadSection } from "../components/AppDownloadSection";
 import { ProviderOnboarding } from "../components/ProviderOnboarding";
 import { Footer } from "../components/Footer";
@@ -60,7 +60,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f8fafc] dark:bg-slate-950">
+    <div className="min-h-screen flex flex-col bg-white">
       {/* Location Picker Modal */}
       <LocationPickerModal
         isOpen={isLocationPickerOpen}
@@ -82,14 +82,14 @@ export default function Home() {
             </span>
             <button
               onClick={() => setIsMobileAppMode(false)}
-              className="px-3 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold hover:bg-amber-400 transition-colors cursor-pointer"
+              className="px-3 py-1.5 rounded-xl bg-[#d49b1a] text-white font-bold hover:bg-[#b88514] transition-colors cursor-pointer"
             >
               Exit to Desktop Web
             </button>
           </div>
 
           {/* Mobile Shell Frame */}
-          <div className="w-full max-w-md bg-white dark:bg-slate-950 rounded-[32px] overflow-hidden shadow-2xl border-4 border-slate-700">
+          <div className="w-full max-w-md bg-white rounded-[32px] overflow-hidden shadow-2xl border-4 border-slate-700">
             <MobileAppExperience
               userLocation={userLocation}
               onOpenLocationPicker={() => setIsLocationPickerOpen(true)}
@@ -129,19 +129,19 @@ export default function Home() {
                 onQuickSearch={handleQuickSearch}
               />
 
-              {/* Live Service Directory (100% parity with App features) */}
+              {/* Live Service Directory (Popular Categories + Nearby Services + 4 Pillars) */}
               <LiveServiceDirectory
                 userLocation={userLocation}
                 onOpenLocationPicker={() => setIsLocationPickerOpen(true)}
               />
 
-              {/* Platform Features */}
-              <SystemFeatures />
-
-              {/* How It Works */}
+              {/* Section 1 from Image 1: How It Works / Trusted by Thousands (4 Steps) */}
               <HowItWorks />
 
-              {/* App Download & QR Scanner Showcase */}
+              {/* Section 2 from Image 2: Why Choose Us (Fast Services, Trusted Care + AC Tech + 4 Cards) */}
+              <WhyChooseUsSection />
+
+              {/* Mobile App Section: Dual Phones Mockup + Store Badges + 5 Golden Checks */}
               <AppDownloadSection />
 
               {/* Service Provider Onboarding */}
