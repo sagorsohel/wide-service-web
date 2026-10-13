@@ -2,9 +2,15 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { UserLocation, Service, Subcategory } from "../../../types";
+import { UserLocation, Service, Subcategory, Category } from "../../../types";
 import { DEFAULT_USER_LOCATION } from "../../../lib/cities";
-import { getServices, getSubcategories } from "../../../lib/api";
+import {
+  getServices,
+  getSubcategories,
+  getCategories,
+  slugifyCategory,
+  getCategoryVisuals,
+} from "../../../lib/api";
 import { Header } from "../../../components/Header";
 import { Footer } from "../../../components/Footer";
 import { CategoryHero } from "../../../components/CategoryHero";
@@ -19,12 +25,12 @@ import {
 import {
   Phone,
   MessageCircle,
-  Star,
+  MapPin,
+  Clock,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Headphones,
-  CheckCircle2,
+  ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -46,18 +52,81 @@ function SingleCategoryContent() {
   const [selectedServiceForModal, setSelectedServiceForModal] =
     useState<Service | null>(null);
 
+  const [categories, setCategories] = useState<Category[]>([]);
   const [liveServices, setLiveServices] = useState<CategoryDetailCardItem[]>([]);
   const [liveSubcategories, setLiveSubcategories] = useState<Subcategory[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0);
   const [loading, setLoading] = useState(false);
 
-  // Active Category Meta
+  // Load all categories dynamically from backend
+  useEffect(() => {
+    async function loadCats() {
+      try {
+        const cats = await getCategories();
+        setCategories(cats);
+      } catch (e) {
+        console.warn("[Wide Service] Failed to load categories:", e);
+      }
+    }
+    loadCats();
+  }, []);
+
+  // Dynamic categories list with slugs & visuals
+  const dynamicCategories = useMemo(() => {
+    if (categories.length > 0) {
+      return categories.map((cat) => {
+        const visuals = getCategoryVisuals(cat.name);
+        return {
+          id: String(cat.id),
+          name: cat.name,
+          slug: slugifyCategory(cat.name),
+          count: "Active",
+          icon: visuals.icon,
+          backendCategoryId: cat.id,
+          subcategories: ["All Subcategories"],
+        };
+      });
+    }
+
+    return CATEGORIES_LIST.filter((c) => c.slug !== "all").map((c) => ({
+      id: c.id,
+      name: c.name,
+      slug: c.slug,
+      count: c.count,
+      icon: c.slug === "ac-repair" ? "❄️" : c.slug === "plumbing" ? "💧" : "⚙️",
+      backendCategoryId: c.backendCategoryId,
+      subcategories: c.subcategories,
+    }));
+  }, [categories]);
+
+  // Active Category Meta: matching slug or ID
   const activeCategory = useMemo(() => {
+    const found = dynamicCategories.find(
+      (c) => c.slug === categorySlug || c.id === categorySlug
+    );
+    if (found) {
+      const visuals = getCategoryVisuals(found.name);
+      return {
+        id: found.id,
+        name: found.name,
+        slug: found.slug,
+        count: found.count,
+        iconBg: visuals.bgColor,
+        backendCategoryId: found.backendCategoryId,
+        badgeText: found.name,
+        heroTitle: found.name,
+        heroSubtitle: `Professional ${found.name} services by verified local technicians. Direct Call and WhatsApp support available.`,
+        heroTagline: "Fast & Reliable Local Service",
+        subcategories: found.subcategories,
+      };
+    }
+
+    const staticFound = CATEGORIES_LIST.find((c) => c.slug === categorySlug);
     return (
-      CATEGORIES_LIST.find((c) => c.slug === categorySlug) ||
+      staticFound ||
       CATEGORIES_LIST[1] // default to AC Repair
     );
-  }, [categorySlug]);
+  }, [categorySlug, dynamicCategories]);
 
   // Fetch live subcategories for this category from backend
   useEffect(() => {
@@ -79,7 +148,7 @@ function SingleCategoryContent() {
     if (liveSubcategories.length > 0) {
       return ["All Subcategories", ...liveSubcategories.map((s) => s.name)];
     }
-    return activeCategory.subcategories;
+    return activeCategory.subcategories || ["All Subcategories"];
   }, [liveSubcategories, activeCategory.subcategories]);
 
   // Fetch live services for this category from backend
@@ -119,18 +188,18 @@ function SingleCategoryContent() {
                   ? s.images[0]
                   : s.logo ||
                     AC_REPAIR_MOCK_CARDS[idx % AC_REPAIR_MOCK_CARDS.length].image,
-              rating: s.rating || 4.9,
-              reviews: s.reviewCount || 120 + ((idx * 23) % 150),
-              price: s.price || "৳ 600 / Unit",
               distance: s.distanceKm
                 ? `${s.distanceKm.toFixed(1)} km`
                 : `${(1.2 + (idx % 4) * 0.8).toFixed(1)} km`,
+              address: s.address,
+              schedule: s.schedule || "Open Today",
               phone: s.phone || "01712-345678",
               whatsapp: s.whatsapp || s.phone || "8801712345678",
+              description: s.description,
               tags: [
                 s.subcategoryName || activeCategory.name,
                 "Verified Technician",
-                "7-Day Warranty",
+                "Direct Contact",
               ],
             })
           );
@@ -151,6 +220,7 @@ function SingleCategoryContent() {
   }, [
     activeCategory.backendCategoryId,
     activeCategory.name,
+    activeCategory.slug,
     selectedSubcategory,
     appliedSearch,
     currentPage,
@@ -159,7 +229,7 @@ function SingleCategoryContent() {
     liveSubcategories,
   ]);
 
-  // Filtered Cards: backend data with graceful fallback to mockup cards
+  // Display Cards: backend services with fallback to mockup cards
   const displayCards = useMemo(() => {
     const source =
       liveServices.length > 0 ? liveServices : AC_REPAIR_MOCK_CARDS;
@@ -190,21 +260,10 @@ function SingleCategoryContent() {
       return true;
     });
 
-    // Sorting
-    if (sortBy === "rating") {
-      filtered = [...filtered].sort((a, b) => b.rating - a.rating);
-    } else if (sortBy === "price_low") {
-      filtered = [...filtered].sort((a, b) => {
-        const pA = parseInt(a.price.replace(/[^0-9]/g, "")) || 0;
-        const pB = parseInt(b.price.replace(/[^0-9]/g, "")) || 0;
-        return pA - pB;
-      });
-    } else if (sortBy === "price_high") {
-      filtered = [...filtered].sort((a, b) => {
-        const pA = parseInt(a.price.replace(/[^0-9]/g, "")) || 0;
-        const pB = parseInt(b.price.replace(/[^0-9]/g, "")) || 0;
-        return pB - pA;
-      });
+    if (sortBy === "name_asc") {
+      filtered = [...filtered].sort((a, b) => a.title.localeCompare(b.title));
+    } else if (sortBy === "name_desc") {
+      filtered = [...filtered].sort((a, b) => b.title.localeCompare(a.title));
     }
 
     return filtered;
@@ -216,15 +275,14 @@ function SingleCategoryContent() {
       name: card.title,
       businessName: card.provider,
       categoryName: activeCategory.name,
-      address: `${userLocation.city || "Dhaka"}, Bangladesh`,
+      address: card.address || `${userLocation.city || "Dhaka"}, Bangladesh`,
+      schedule: card.schedule || "Open 24/7",
       phone: card.phone,
       whatsapp: card.whatsapp,
-      rating: card.rating,
-      reviewCount: card.reviews,
-      price: card.price,
       distanceKm: parseFloat(card.distance),
+      description: card.description,
       status: "active",
-      categoryId: 1,
+      categoryId: activeCategory.backendCategoryId || 1,
       images: [card.image],
     };
     setSelectedServiceForModal(srv);
@@ -243,6 +301,8 @@ function SingleCategoryContent() {
     );
     window.open(`https://wa.me/${cleanNumber}?text=${msg}`, "_blank");
   };
+
+  const totalPages = Math.max(1, Math.ceil((totalCount || displayCards.length) / 10));
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f8fafc]">
@@ -273,7 +333,7 @@ function SingleCategoryContent() {
 
       {/* Main Content */}
       <main className="flex-1">
-        {/* 1. Category Hero with Breadcrumbs & Badges matching Right Mockup */}
+        {/* 1. Category Hero with Breadcrumbs & Badges */}
         <CategoryHero category={activeCategory} />
 
         {/* 2. Subcategory, Price & Search Filter Bar */}
@@ -294,21 +354,24 @@ function SingleCategoryContent() {
         {/* 3. Main Directory Section (Sidebar 25% + Grid 75%) */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Left Sidebar: Categories + Call Support Card + Why Choose Us (col-span-3) */}
+            {/* Left Sidebar: All Categories + Support (col-span-3) */}
             <aside className="lg:col-span-3 space-y-6">
               {/* All Categories List */}
               <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs">
-                <h3 className="text-sm font-extrabold text-[#0f172a] mb-4 tracking-tight">
-                  All Categories
+                <h3 className="text-sm font-extrabold text-[#0f172a] mb-4 tracking-tight flex items-center justify-between">
+                  <span>All Categories</span>
+                  <span className="text-[11px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                    {dynamicCategories.length} Total
+                  </span>
                 </h3>
 
-                <div className="space-y-1">
-                  {CATEGORIES_LIST.map((cat) => {
+                <div className="space-y-1 max-h-[460px] overflow-y-auto pr-1">
+                  {dynamicCategories.map((cat) => {
                     const isActive = activeCategory.slug === cat.slug;
                     return (
                       <Link
                         key={cat.slug}
-                        href={cat.slug === "all" ? "/services" : `/services/${cat.slug}`}
+                        href={`/services/${cat.slug}`}
                         className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs transition-all cursor-pointer ${
                           isActive
                             ? "bg-[#fef3c7] text-[#92400e] border border-[#fde68a] font-bold shadow-2xs"
@@ -316,25 +379,7 @@ function SingleCategoryContent() {
                         }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <span className="text-sm shrink-0">
-                            {cat.slug === "ac-repair"
-                              ? "❄️"
-                              : cat.slug === "plumbing"
-                              ? "💧"
-                              : cat.slug === "electrical"
-                              ? "⚡"
-                              : cat.slug === "cleaning"
-                              ? "🧹"
-                              : cat.slug === "carpentry"
-                              ? "🔨"
-                              : cat.slug === "cctv"
-                              ? "📹"
-                              : cat.slug === "appliances"
-                              ? "🧺"
-                              : cat.slug === "all"
-                              ? "⊞"
-                              : "⚙️"}
-                          </span>
+                          <span className="text-sm shrink-0">{cat.icon}</span>
                           <span className="truncate">{cat.name}</span>
                         </div>
                         <span
@@ -352,9 +397,8 @@ function SingleCategoryContent() {
                 </div>
               </div>
 
-              {/* Need Help? Call Us Now Card matching Right Mockup */}
+              {/* Need Help? Call Us Now Card */}
               <div className="rounded-2xl border border-amber-200 bg-[#fef9c3] p-5 shadow-2xs text-center space-y-3">
-                {/* Agent Avatar */}
                 <div className="relative w-14 h-14 mx-auto rounded-full bg-white border-2 border-[#d49b1a] overflow-hidden flex items-center justify-center shadow-xs">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -374,7 +418,6 @@ function SingleCategoryContent() {
                   </p>
                 </div>
 
-                {/* Call Button Pill */}
                 <a
                   href="tel:+8801700000000"
                   className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-full bg-[#d49b1a] hover:bg-[#b88514] text-slate-950 font-black text-xs shadow-xs transition-colors cursor-pointer"
@@ -383,14 +426,13 @@ function SingleCategoryContent() {
                   <span>+880 1700 000 000</span>
                 </a>
 
-                {/* Status Dot */}
                 <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-600 font-medium">
                   <span className="w-2 h-2 rounded-full bg-[#10b981] animate-pulse" />
-                  <span>Available 24/7</span>
+                  <span>Available 24/7 Support</span>
                 </div>
               </div>
 
-              {/* Why Choose Us? Card matching Right Mockup */}
+              {/* Why Choose Us? Card */}
               <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-3">
                 <h4 className="text-sm font-black text-[#0f172a] tracking-tight">
                   Why Choose Us?
@@ -402,11 +444,11 @@ function SingleCategoryContent() {
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="text-[#d49b1a] text-sm font-bold">✓</span>
-                    <span>Transparent Pricing</span>
+                    <span>Direct Call & WhatsApp Connect</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="text-[#d49b1a] text-sm font-bold">✓</span>
-                    <span>Fast & Reliable Service</span>
+                    <span>Fast & Reliable Local Service</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="text-[#d49b1a] text-sm font-bold">✓</span>
@@ -438,16 +480,15 @@ function SingleCategoryContent() {
                       className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-[#0f172a] focus:outline-none cursor-pointer pr-7 appearance-none"
                     >
                       <option value="nearest">Nearest First</option>
-                      <option value="rating">Highest Rated</option>
-                      <option value="price_low">Price: Low to High</option>
-                      <option value="price_high">Price: High to Low</option>
+                      <option value="name_asc">Name: A to Z</option>
+                      <option value="name_desc">Name: Z to A</option>
                     </select>
                     <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-2.5 pointer-events-none" />
                   </div>
                 </div>
               </div>
 
-              {/* 2-Column Detailed Category Cards Grid matching Right Mockup */}
+              {/* 2-Column Detailed Category Cards Grid - No Price, No Rating */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {displayCards.map((card) => (
                   <div
@@ -486,32 +527,16 @@ function SingleCategoryContent() {
                           {card.provider}
                         </p>
 
-                        {/* Rating & Reviews */}
-                        <div className="flex items-center gap-1.5 text-xs">
-                          <span className="font-extrabold text-slate-800">
-                            {card.rating}
-                          </span>
-                          <span className="text-[#f59e0b]">★</span>
-                          <span className="text-[11px] text-slate-400">
-                            ({card.reviews} reviews)
-                          </span>
+                        {/* Location / Address */}
+                        <div className="flex items-center gap-1.5 text-xs text-slate-600 truncate">
+                          <MapPin className="w-3.5 h-3.5 text-[#d49b1a] shrink-0" />
+                          <span className="truncate">{card.address || "Available Locally"}</span>
                         </div>
 
-                        {/* Price */}
-                        <div className="font-bold text-xs text-[#0f172a]">
-                          {card.price}
-                        </div>
-
-                        {/* Feature Tags Row matching Right Mockup */}
-                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                          {card.tags.map((tag) => (
-                            <span
-                              key={tag}
-                              className="px-2 py-0.5 rounded-md bg-sky-50 text-[#0284c7] text-[10px] font-bold border border-sky-100"
-                            >
-                              {tag}
-                            </span>
-                          ))}
+                        {/* Availability / Schedule */}
+                        <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 font-semibold truncate">
+                          <Clock className="w-3.5 h-3.5 shrink-0" />
+                          <span className="truncate">{card.schedule || "Open Today"}</span>
                         </div>
                       </div>
                     </div>
@@ -539,7 +564,7 @@ function SingleCategoryContent() {
                 ))}
               </div>
 
-              {/* Pagination matching Right Mockup: < 1 2 3 4 5 ... max > */}
+              {/* Pagination */}
               <div className="flex items-center justify-center gap-2 pt-6 pb-2">
                 <button
                   disabled={currentPage === 1}
@@ -549,7 +574,7 @@ function SingleCategoryContent() {
                   <ChevronLeft className="w-4 h-4" />
                 </button>
 
-                {[1, 2, 3, 4, 5].map((page) => (
+                {[1, 2, 3, 4, 5].slice(0, totalPages).map((page) => (
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
@@ -563,22 +588,26 @@ function SingleCategoryContent() {
                   </button>
                 ))}
 
-                <span className="text-slate-400 text-xs px-1">...</span>
+                {totalPages > 5 && (
+                  <>
+                    <span className="text-slate-400 text-xs px-1">...</span>
+                    <button
+                      onClick={() => setCurrentPage(totalPages)}
+                      className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                        currentPage === totalPages
+                          ? "bg-[#d49b1a] text-white shadow-xs"
+                          : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      {totalPages}
+                    </button>
+                  </>
+                )}
 
                 <button
-                  onClick={() => setCurrentPage(15)}
-                  className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                    currentPage === 15
-                      ? "bg-[#d49b1a] text-white shadow-xs"
-                      : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                  }`}
-                >
-                  15
-                </button>
-
-                <button
-                  onClick={() => setCurrentPage((p) => p + 1)}
-                  className="w-8 h-8 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:bg-slate-50 cursor-pointer"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  className="w-8 h-8 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -607,4 +636,3 @@ export default function SingleCategoryPage() {
     </React.Suspense>
   );
 }
-

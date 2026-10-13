@@ -1,9 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { UserLocation, Service } from "../../types";
+import { UserLocation, Service, Category } from "../../types";
 import { DEFAULT_USER_LOCATION } from "../../lib/cities";
-import { getServices } from "../../lib/api";
+import {
+  getServices,
+  getCategories,
+  slugifyCategory,
+  getCategoryVisuals,
+} from "../../lib/api";
 import { Header } from "../../components/Header";
 import { Footer } from "../../components/Footer";
 import { AllServicesHero } from "../../components/AllServicesHero";
@@ -18,43 +23,93 @@ import {
 import {
   Phone,
   MessageCircle,
-  Star,
+  MapPin,
+  Clock,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Filter,
+  ShieldCheck,
+  Headphones,
 } from "lucide-react";
 import Link from "next/link";
 
 export default function ServicesPage() {
   const [userLocation, setUserLocation] = useState<UserLocation>(
-    DEFAULT_USER_LOCATION
+    DEFAULT_USER_LOCATION,
   );
   const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
   const [selectedCategorySlug, setSelectedCategorySlug] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
   const [sortBy, setSortBy] = useState("nearest");
-  const [selectedPriceFilters, setSelectedPriceFilters] = useState<string[]>([]);
-  const [selectedRatingFilter, setSelectedRatingFilter] = useState<number | null>(
-    null
-  );
-  const [selectedExperienceFilter, setSelectedExperienceFilter] = useState<
-    string | null
-  >(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedServiceForModal, setSelectedServiceForModal] =
     useState<Service | null>(null);
+
+  const [categories, setCategories] = useState<Category[]>([]);
   const [liveServices, setLiveServices] = useState<AllServicesCardItem[]>([]);
-  const [totalCount, setTotalCount] = useState<number>(1800);
+  const [totalCount, setTotalCount] = useState<number>(0);
   const [loading, setLoading] = useState(false);
+
+  // Load dynamic categories from backend API
+  useEffect(() => {
+    async function loadCats() {
+      try {
+        const cats = await getCategories();
+        setCategories(cats);
+      } catch (err) {
+        console.warn("[Wide Service] Categories fetch fallback:", err);
+      }
+    }
+    loadCats();
+  }, []);
+
+  // Dynamic category list combining "All Services" and real backend categories
+  const dynamicCategories = useMemo(() => {
+    const list = [
+      {
+        id: "all",
+        name: "All Services",
+        slug: "all",
+        count: totalCount > 0 ? `${totalCount}+` : "1,800+",
+        icon: "⊞",
+        backendCategoryId: undefined as number | undefined,
+      },
+    ];
+
+    if (categories.length > 0) {
+      categories.forEach((cat) => {
+        const visuals = getCategoryVisuals(cat.name);
+        list.push({
+          id: String(cat.id),
+          name: cat.name,
+          slug: slugifyCategory(cat.name),
+          count: "Active",
+          icon: visuals.icon,
+          backendCategoryId: cat.id,
+        });
+      });
+      return list;
+    }
+
+    return CATEGORIES_LIST.map((c) => ({
+      id: c.id,
+      name: c.name,
+      slug: c.slug,
+      count: c.count,
+      icon: c.slug === "ac-repair" ? "❄️" : c.slug === "plumbing" ? "💧" : "⚙️",
+      backendCategoryId: c.backendCategoryId,
+    }));
+  }, [categories, totalCount]);
 
   // Fetch live backend services on filters/page change
   useEffect(() => {
     async function fetchBackendData() {
       setLoading(true);
       try {
-        const catMeta = CATEGORIES_LIST.find((c) => c.slug === selectedCategorySlug);
+        const catMeta = dynamicCategories.find(
+          (c) => c.slug === selectedCategorySlug,
+        );
         const res = await getServices({
           categoryId: catMeta?.backendCategoryId,
           search: appliedSearch || undefined,
@@ -65,24 +120,42 @@ export default function ServicesPage() {
         });
 
         if (res.services && res.services.length > 0) {
-          const mapped: AllServicesCardItem[] = res.services.map((s: Service, idx: number) => ({
-            id: s.id,
-            name: s.name,
-            category: s.businessName || s.categoryName || "Home Service",
-            categorySlug: selectedCategorySlug !== "all" ? selectedCategorySlug : "other",
-            image: Array.isArray(s.images) && s.images[0] ? s.images[0] : ALL_SERVICES_MOCK_CARDS[idx % ALL_SERVICES_MOCK_CARDS.length].image,
-            rating: s.rating || 4.8,
-            reviews: s.reviewCount || 120,
-            price: s.price || "৳ 500 / Visit",
-            distance: s.distanceKm ? `${s.distanceKm.toFixed(1)} km` : `${(1.2 + (idx % 6) * 1.1).toFixed(1)} km`,
-            phone: s.phone || "01712-345678",
-            whatsapp: s.whatsapp || s.phone || "8801712345678",
-            iconBg: ALL_SERVICES_MOCK_CARDS[idx % ALL_SERVICES_MOCK_CARDS.length].iconBg,
-          }));
+          const mapped: AllServicesCardItem[] = res.services.map(
+            (s: Service, idx: number) => {
+              const visuals = getCategoryVisuals(
+                s.categoryName || s.name || "service",
+              );
+              return {
+                id: s.id,
+                name: s.name,
+                category: s.businessName || s.categoryName || "Home Service",
+                categorySlug:
+                  selectedCategorySlug !== "all"
+                    ? selectedCategorySlug
+                    : slugifyCategory(s.categoryName || "service"),
+                image:
+                  Array.isArray(s.images) && s.images[0]
+                    ? s.images[0]
+                    : s.logo ||
+                      ALL_SERVICES_MOCK_CARDS[
+                        idx % ALL_SERVICES_MOCK_CARDS.length
+                      ].image,
+                distance: s.distanceKm
+                  ? `${s.distanceKm.toFixed(1)} km`
+                  : `${(1.2 + (idx % 6) * 1.1).toFixed(1)} km`,
+                address: s.address,
+                schedule: s.schedule || "Open Today",
+                phone: s.phone || "01712-345678",
+                whatsapp: s.whatsapp || s.phone || "8801712345678",
+                iconBg: visuals.bgColor,
+              };
+            },
+          );
           setLiveServices(mapped);
           setTotalCount(res.total || mapped.length);
         } else {
           setLiveServices([]);
+          setTotalCount(0);
         }
       } catch (err) {
         console.warn("[Wide Service] Backend fetch fallback:", err);
@@ -98,11 +171,13 @@ export default function ServicesPage() {
     currentPage,
     userLocation.latitude,
     userLocation.longitude,
+    dynamicCategories,
   ]);
 
-  // Cards to display (live backend services with graceful fallback)
+  // Cards to display with sorting
   const filteredCards = useMemo(() => {
-    const source = liveServices.length > 0 ? liveServices : ALL_SERVICES_MOCK_CARDS;
+    const source =
+      liveServices.length > 0 ? liveServices : ALL_SERVICES_MOCK_CARDS;
     let result = source.filter((card) => {
       // Category filter for fallback
       if (
@@ -119,49 +194,32 @@ export default function ServicesPage() {
         const matchesCat = card.category.toLowerCase().includes(q);
         if (!matchesName && !matchesCat) return false;
       }
-      // Rating filter
-      if (selectedRatingFilter && card.rating < selectedRatingFilter) {
-        return false;
-      }
       return true;
     });
 
-    if (sortBy === "rating") {
-      result = [...result].sort((a, b) => b.rating - a.rating);
-    } else if (sortBy === "price_low") {
-      result = [...result].sort((a, b) => {
-        const pA = parseInt(a.price.replace(/[^0-9]/g, "")) || 0;
-        const pB = parseInt(b.price.replace(/[^0-9]/g, "")) || 0;
-        return pA - pB;
-      });
-    } else if (sortBy === "price_high") {
-      result = [...result].sort((a, b) => {
-        const pA = parseInt(a.price.replace(/[^0-9]/g, "")) || 0;
-        const pB = parseInt(b.price.replace(/[^0-9]/g, "")) || 0;
-        return pB - pA;
-      });
+    if (sortBy === "name_asc") {
+      result = [...result].sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortBy === "name_desc") {
+      result = [...result].sort((a, b) => b.name.localeCompare(a.name));
     }
 
     return result;
-  }, [liveServices, selectedCategorySlug, appliedSearch, selectedRatingFilter, sortBy]);
+  }, [liveServices, selectedCategorySlug, appliedSearch, sortBy]);
 
   const handlePerformSearch = () => {
     setAppliedSearch(searchQuery);
   };
 
   const handleCardClick = (card: AllServicesCardItem) => {
-    // Convert to Service object to open ServiceDetailModal
     const srv: Service = {
       id: card.id,
       name: card.name,
       businessName: card.category,
       categoryName: card.category,
-      address: `${userLocation.city || "Dhaka"}, Bangladesh`,
+      address: card.address || `${userLocation.city || "Dhaka"}, Bangladesh`,
+      schedule: card.schedule || "Open 24/7",
       phone: card.phone,
       whatsapp: card.whatsapp,
-      rating: card.rating,
-      reviewCount: card.reviews,
-      price: card.price,
       distanceKm: parseFloat(card.distance),
       status: "active",
       categoryId: 1,
@@ -175,14 +233,23 @@ export default function ServicesPage() {
     window.open(`tel:${phone}`, "_self");
   };
 
-  const handleWhatsapp = (e: React.MouseEvent, whatsapp: string, name: string) => {
+  const handleWhatsapp = (
+    e: React.MouseEvent,
+    whatsapp: string,
+    name: string,
+  ) => {
     e.stopPropagation();
     const cleanNumber = whatsapp.replace(/[^0-9]/g, "");
     const msg = encodeURIComponent(
-      `Hello ${name}, I found your service on Wide Service and would like to hire you.`
+      `Hello ${name}, I found your service on Wide Service and would like to hire you.`,
     );
     window.open(`https://wa.me/${cleanNumber}?text=${msg}`, "_blank");
   };
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil((totalCount || filteredCards.length) / 12),
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f8fafc]">
@@ -213,7 +280,7 @@ export default function ServicesPage() {
 
       {/* Main Content */}
       <main className="flex-1">
-        {/* 1. All Services Hero matching Left Mockup */}
+        {/* 1. All Services Hero */}
         <AllServicesHero
           userLocation={userLocation}
           onOpenLocationPicker={() => setIsLocationPickerOpen(true)}
@@ -227,24 +294,31 @@ export default function ServicesPage() {
         {/* 2. 4-Feature Value Strip */}
         <ServicesFeatureStrip />
 
-        {/* 3. Main Two-Column Directory Section (Sidebar 25% + Grid 75%) */}
+        {/* 3. Main Directory Section (Sidebar 25% + Grid 75%) */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Left Sidebar: Filters matching Mockup (col-span-3) */}
+            {/* Left Sidebar: Dynamic Categories & Support (col-span-3) */}
             <aside className="lg:col-span-3 space-y-6">
-              {/* Categories Widget */}
+              {/* Dynamic Categories Widget */}
               <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs">
                 <h3 className="text-sm font-extrabold text-[#0f172a] mb-4 tracking-tight flex items-center justify-between">
                   <span>Categories</span>
+                  <span className="text-[11px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                    {dynamicCategories.length - 1} Total
+                  </span>
                 </h3>
 
-                <div className="space-y-1">
-                  {CATEGORIES_LIST.map((cat) => {
+                <div className="space-y-1 max-h-[460px] overflow-y-auto pr-1">
+                  {dynamicCategories.map((cat) => {
                     const isActive = selectedCategorySlug === cat.slug;
                     return (
                       <Link
                         key={cat.slug}
-                        href={cat.slug === "all" ? "/services" : `/services/${cat.slug}`}
+                        href={
+                          cat.slug === "all"
+                            ? "/services"
+                            : `/services/${cat.slug}`
+                        }
                         className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs transition-all cursor-pointer ${
                           isActive
                             ? "bg-[#fef3c7] text-[#92400e] border border-[#fde68a] font-bold shadow-2xs"
@@ -252,25 +326,7 @@ export default function ServicesPage() {
                         }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <span className="text-sm shrink-0">
-                            {cat.slug === "ac-repair"
-                              ? "❄️"
-                              : cat.slug === "plumbing"
-                              ? "💧"
-                              : cat.slug === "electrical"
-                              ? "⚡"
-                              : cat.slug === "cleaning"
-                              ? "🧹"
-                              : cat.slug === "carpentry"
-                              ? "🔨"
-                              : cat.slug === "cctv"
-                              ? "📹"
-                              : cat.slug === "appliances"
-                              ? "🧺"
-                              : cat.slug === "all"
-                              ? "⊞"
-                              : "⚙️"}
-                          </span>
+                          <span className="text-sm shrink-0">{cat.icon}</span>
                           <span className="truncate">{cat.name}</span>
                         </div>
                         <span
@@ -288,120 +344,80 @@ export default function ServicesPage() {
                 </div>
               </div>
 
-              {/* Price Range Widget */}
-              <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs">
-                <h3 className="text-sm font-extrabold text-[#0f172a] mb-3.5 tracking-tight">
-                  Price Range
-                </h3>
-                <div className="space-y-2 text-xs text-slate-600 font-medium">
-                  {[
-                    "Under ৳500",
-                    "৳500 - ৳1,000",
-                    "৳1,000 - ৳2,000",
-                    "৳2,000 - ৳5,000",
-                    "Above ৳5,000",
-                  ].map((range) => (
-                    <label
-                      key={range}
-                      className="flex items-center gap-2.5 cursor-pointer hover:text-slate-900 select-none"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedPriceFilters.includes(range)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedPriceFilters([
-                              ...selectedPriceFilters,
-                              range,
-                            ]);
-                          } else {
-                            setSelectedPriceFilters(
-                              selectedPriceFilters.filter((r) => r !== range)
-                            );
-                          }
-                        }}
-                        className="rounded border-slate-300 text-[#d49b1a] focus:ring-[#d49b1a] w-4 h-4"
-                      />
-                      <span>{range}</span>
-                    </label>
-                  ))}
+              {/* Need Help? Call Us Now Card */}
+              <div className="rounded-2xl border border-amber-200 bg-[#fef9c3] p-5 shadow-2xs text-center space-y-3">
+                <div className="relative w-14 h-14 mx-auto rounded-full bg-white border-2 border-[#d49b1a] overflow-hidden flex items-center justify-center shadow-xs">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80"
+                    alt="Support Agent"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#10b981] border-2 border-white" />
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-black text-[#0f172a] tracking-tight">
+                    Need Help?
+                  </h4>
+                  <p className="text-xs font-bold text-slate-700">
+                    Call Us Now
+                  </p>
+                </div>
+
+                <a
+                  href="tel:+8801700000000"
+                  className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-full bg-[#d49b1a] hover:bg-[#b88514] text-slate-950 font-black text-xs shadow-xs transition-colors cursor-pointer"
+                >
+                  <Phone className="w-3.5 h-3.5 fill-current" />
+                  <span>+880 1700 000 000</span>
+                </a>
+
+                <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-600 font-medium">
+                  <span className="w-2 h-2 rounded-full bg-[#10b981] animate-pulse" />
+                  <span>Available 24/7 Support</span>
                 </div>
               </div>
 
-              {/* Rating Widget */}
-              <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs">
-                <h3 className="text-sm font-extrabold text-[#0f172a] mb-3.5 tracking-tight">
-                  Rating
-                </h3>
-                <div className="space-y-2 text-xs font-medium">
-                  {[
-                    { stars: 5, val: 4.5, label: "4.5 & above" },
-                    { stars: 4, val: 4.0, label: "4.0 & above" },
-                    { stars: 3, val: 3.5, label: "3.5 & above" },
-                  ].map((r) => (
-                    <label
-                      key={r.val}
-                      onClick={() =>
-                        setSelectedRatingFilter(
-                          selectedRatingFilter === r.val ? null : r.val
-                        )
-                      }
-                      className="flex items-center gap-2 cursor-pointer select-none text-slate-700 hover:text-slate-900"
-                    >
-                      <input
-                        type="radio"
-                        checked={selectedRatingFilter === r.val}
-                        onChange={() => {}}
-                        className="text-[#d49b1a] focus:ring-[#d49b1a] w-4 h-4"
-                      />
-                      <div className="flex items-center gap-0.5 text-[#f59e0b]">
-                        {[...Array(r.stars)].map((_, i) => (
-                          <Star key={i} className="w-3.5 h-3.5 fill-[#f59e0b]" />
-                        ))}
-                      </div>
-                      <span className="text-[11px] text-slate-500">{r.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Experience Widget */}
-              <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs">
-                <h3 className="text-sm font-extrabold text-[#0f172a] mb-3.5 tracking-tight">
-                  Experience
-                </h3>
-                <div className="space-y-2 text-xs text-slate-600 font-medium">
-                  {["1+ year", "3+ years", "5+ years", "10+ years"].map((exp) => (
-                    <label
-                      key={exp}
-                      className="flex items-center gap-2.5 cursor-pointer hover:text-slate-900 select-none"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedExperienceFilter === exp}
-                        onChange={() =>
-                          setSelectedExperienceFilter(
-                            selectedExperienceFilter === exp ? null : exp
-                          )
-                        }
-                        className="rounded border-slate-300 text-[#d49b1a] focus:ring-[#d49b1a] w-4 h-4"
-                      />
-                      <span>{exp}</span>
-                    </label>
-                  ))}
-                </div>
+              {/* Why Choose Us Card */}
+              <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-3">
+                <h4 className="text-sm font-black text-[#0f172a] tracking-tight">
+                  Why Choose Us?
+                </h4>
+                <ul className="space-y-2 text-xs font-semibold text-slate-700">
+                  <li className="flex items-center gap-2">
+                    <span className="text-[#d49b1a] text-sm font-bold">✓</span>
+                    <span>Verified & Experienced Technicians</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-[#d49b1a] text-sm font-bold">✓</span>
+                    <span>Direct Call & WhatsApp Access</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-[#d49b1a] text-sm font-bold">✓</span>
+                    <span>Nearby Location Based Matching</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-[#d49b1a] text-sm font-bold">✓</span>
+                    <span>100% Genuine Local Service</span>
+                  </li>
+                </ul>
               </div>
             </aside>
 
             {/* Right Main Grid Area (col-span-9) */}
             <section className="lg:col-span-9 space-y-6">
-              {/* Header Bar: Results Count + Sort Dropdown matching Mockup */}
+              {/* Header Bar */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white rounded-2xl border border-slate-200/90 px-5 py-4 shadow-2xs">
                 <div>
                   <h2 className="text-base sm:text-lg font-black text-[#0f172a] tracking-tight">
                     All Services{" "}
                     <span className="text-slate-400 font-medium text-xs sm:text-sm">
-                      ({filteredCards.length > 0 ? "1,800+ found" : "0 found"})
+                      (
+                      {totalCount > 0
+                        ? `${totalCount}+ found`
+                        : `${filteredCards.length} found`}
+                      )
                     </span>
                   </h2>
                 </div>
@@ -415,16 +431,15 @@ export default function ServicesPage() {
                       className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-[#0f172a] focus:outline-none cursor-pointer pr-7 appearance-none"
                     >
                       <option value="nearest">Nearest First</option>
-                      <option value="rating">Highest Rated</option>
-                      <option value="price_low">Price: Low to High</option>
-                      <option value="price_high">Price: High to Low</option>
+                      <option value="name_asc">Name: A to Z</option>
+                      <option value="name_desc">Name: Z to A</option>
                     </select>
                     <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-2.5 pointer-events-none" />
                   </div>
                 </div>
               </div>
 
-              {/* 3-Column Service Cards Grid matching Left Mockup (9 cards) */}
+              {/* 3-Column Service Cards Grid - No Price, No Rating */}
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                 {filteredCards.map((card) => (
                   <div
@@ -442,9 +457,7 @@ export default function ServicesPage() {
                           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />
                         {/* Verified Badge */}
-                        <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md bg-[#10b981] text-white text-[10px] font-bold shadow-2xs">
-                          ✓ Verified
-                        </div>
+
                         {/* Distance Badge */}
                         <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md bg-white text-slate-800 text-[10px] font-bold shadow-2xs">
                           📍 {card.distance}
@@ -454,7 +467,6 @@ export default function ServicesPage() {
                       {/* Card Body */}
                       <div className="p-4">
                         <div className="flex items-start gap-2.5 mb-2">
-                          {/* Round colored category icon */}
                           <div
                             className={`w-8 h-8 rounded-full ${card.iconBg} text-white flex items-center justify-center shrink-0 shadow-2xs text-xs`}
                           >
@@ -470,20 +482,20 @@ export default function ServicesPage() {
                           </div>
                         </div>
 
-                        {/* Rating & Reviews */}
-                        <div className="flex items-center gap-1.5 text-xs mb-2">
-                          <span className="font-extrabold text-slate-800">
-                            {card.rating}
-                          </span>
-                          <span className="text-[#f59e0b]">★</span>
-                          <span className="text-[11px] text-slate-400">
-                            ({card.reviews} reviews)
+                        {/* Location / Address */}
+                        <div className="flex items-center gap-1.5 text-xs text-slate-600 mt-2 truncate">
+                          <MapPin className="w-3.5 h-3.5 text-[#d49b1a] shrink-0" />
+                          <span className="truncate">
+                            {card.address || "Available Locally"}
                           </span>
                         </div>
 
-                        {/* Price */}
-                        <div className="font-bold text-xs sm:text-sm text-[#0f172a]">
-                          {card.price}
+                        {/* Availability / Schedule */}
+                        <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 font-semibold mt-1.5 mb-1 truncate">
+                          <Clock className="w-3.5 h-3.5 shrink-0" />
+                          <span className="truncate">
+                            {card.schedule || "Open Today"}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -511,7 +523,7 @@ export default function ServicesPage() {
                 ))}
               </div>
 
-              {/* Pagination matching Left Mockup: < 1 2 3 4 5 ... 60 > */}
+              {/* Pagination */}
               <div className="flex items-center justify-center gap-2 pt-6 pb-2">
                 <button
                   disabled={currentPage === 1}
@@ -521,7 +533,7 @@ export default function ServicesPage() {
                   <ChevronLeft className="w-4 h-4" />
                 </button>
 
-                {[1, 2, 3, 4, 5].map((page) => (
+                {[1, 2, 3, 4, 5].slice(0, totalPages).map((page) => (
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
@@ -535,22 +547,28 @@ export default function ServicesPage() {
                   </button>
                 ))}
 
-                <span className="text-slate-400 text-xs px-1">...</span>
+                {totalPages > 5 && (
+                  <>
+                    <span className="text-slate-400 text-xs px-1">...</span>
+                    <button
+                      onClick={() => setCurrentPage(totalPages)}
+                      className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                        currentPage === totalPages
+                          ? "bg-[#d49b1a] text-white shadow-xs"
+                          : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      {totalPages}
+                    </button>
+                  </>
+                )}
 
                 <button
-                  onClick={() => setCurrentPage(60)}
-                  className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                    currentPage === 60
-                      ? "bg-[#d49b1a] text-white shadow-xs"
-                      : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                  }`}
-                >
-                  60
-                </button>
-
-                <button
-                  onClick={() => setCurrentPage((p) => Math.min(60, p + 1))}
-                  className="w-8 h-8 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:bg-slate-50 cursor-pointer"
+                  disabled={currentPage >= totalPages}
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
+                  className="w-8 h-8 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>

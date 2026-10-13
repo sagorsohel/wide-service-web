@@ -231,6 +231,41 @@ export async function getSubcategories(categoryId: number): Promise<Subcategory[
 }
 
 /**
+ * Creates URL-friendly slug from category name
+ */
+export function slugifyCategory(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/**
+ * Returns consistent visual theme (icon, background) for any category name
+ */
+export function getCategoryVisuals(catName: string): { icon: string; bgColor: string } {
+  const n = catName.toLowerCase();
+  if (n.includes("ac") || n.includes("cooling")) return { icon: "❄️", bgColor: "bg-[#0284c7]" };
+  if (n.includes("plumb")) return { icon: "💧", bgColor: "bg-[#0891b2]" };
+  if (n.includes("electr")) return { icon: "⚡", bgColor: "bg-[#eab308]" };
+  if (n.includes("clean") || n.includes("saniti")) return { icon: "🧹", bgColor: "bg-[#059669]" };
+  if (n.includes("carpent") || n.includes("wood")) return { icon: "🔨", bgColor: "bg-[#9333ea]" };
+  if (n.includes("cctv") || n.includes("secur")) return { icon: "📹", bgColor: "bg-[#e11d48]" };
+  if (n.includes("appliance") || n.includes("wash")) return { icon: "🧺", bgColor: "bg-[#2563eb]" };
+  if (n.includes("paint")) return { icon: "🎨", bgColor: "bg-[#f59e0b]" };
+  if (n.includes("gas") || n.includes("stove")) return { icon: "🔥", bgColor: "bg-[#ea580c]" };
+  if (n.includes("shift") || n.includes("mov")) return { icon: "🚚", bgColor: "bg-[#0d9488]" };
+  if (n.includes("pest")) return { icon: "🐜", bgColor: "bg-[#84cc16]" };
+  if (n.includes("solar")) return { icon: "☀️", bgColor: "bg-[#eab308]" };
+  if (n.includes("car") || n.includes("bike") || n.includes("motorcycle")) return { icon: "🚗", bgColor: "bg-[#6366f1]" };
+  if (n.includes("computer") || n.includes("laptop")) return { icon: "💻", bgColor: "bg-[#3b82f6]" };
+  if (n.includes("smart") || n.includes("gadget")) return { icon: "📱", bgColor: "bg-[#6366f1]" };
+  if (n.includes("beauty") || n.includes("salon") || n.includes("spa")) return { icon: "💇", bgColor: "bg-[#ec4899]" };
+  return { icon: "⊞", bgColor: "bg-[#64748b]" };
+}
+
+/**
  * Fetch services with optional category, subcategory, search, location, and radius filtering
  */
 export async function getServices(params?: {
@@ -262,13 +297,12 @@ export async function getServices(params?: {
     if (res.ok) {
       const json = await res.json();
       if (Array.isArray(json.data) && json.data.length > 0) {
-        const mapped: Service[] = json.data.map((srv: any, idx: number) => ({
+        const mapped: Service[] = json.data.map((srv: any) => ({
           ...srv,
-          images: Array.isArray(srv.images) && srv.images.length > 0 ? srv.images : [srv.logo || "/hero_technician.jpg"],
-          price: srv.price || (idx % 2 === 0 ? "৳ 600 / Visit" : "৳ 450 / Visit"),
-          rating: srv.rating || 4.8 + ((idx % 3) * 0.1),
-          reviewCount: srv.reviewCount || 120 + ((idx * 23) % 150),
-          experience: srv.experience || `${5 + (idx % 8)}-year Experience`,
+          images:
+            Array.isArray(srv.images) && srv.images.length > 0
+              ? srv.images
+              : [srv.logo || "/hero_technician.jpg"],
         }));
 
         const total = json.total || json.pagination?.total || mapped.length;
@@ -318,10 +352,6 @@ export async function getServiceById(id: number): Promise<Service | null> {
             Array.isArray(srv.images) && srv.images.length > 0
               ? srv.images
               : [srv.logo || "/hero_technician.jpg"],
-          price: srv.price || "৳ 550 / Visit",
-          rating: srv.rating || 4.9,
-          reviewCount: srv.reviewCount || 140,
-          experience: srv.experience || "8-year Experience",
         };
       }
     }

@@ -192,13 +192,16 @@ export interface AllServicesCardItem {
   category: string;
   categorySlug: string;
   image: string;
-  rating: number;
-  reviews: number;
-  price: string;
   distance: string;
   phone: string;
   whatsapp: string;
   iconBg: string;
+  address?: string;
+  schedule?: string | null;
+  description?: string | null;
+  rating?: number;
+  reviews?: number;
+  price?: string;
 }
 
 export const ALL_SERVICES_MOCK_CARDS: AllServicesCardItem[] = [
@@ -336,13 +339,16 @@ export interface CategoryDetailCardItem {
   provider: string;
   categorySlug: string;
   image: string;
-  rating: number;
-  reviews: number;
-  price: string;
   distance: string;
   tags: string[];
   phone: string;
   whatsapp: string;
+  address?: string;
+  schedule?: string | null;
+  description?: string | null;
+  rating?: number;
+  reviews?: number;
+  price?: string;
 }
 
 export const AC_REPAIR_MOCK_CARDS: CategoryDetailCardItem[] = [

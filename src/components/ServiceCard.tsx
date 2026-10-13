@@ -94,15 +94,15 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
           <span className="truncate">{service.address}</span>
         </div>
 
-        {/* Phone & Price */}
+        {/* Phone & Availability */}
         <div className="flex items-center justify-between text-[11px]">
           <div className="flex items-center text-emerald-700 dark:text-emerald-400 font-mono font-bold">
             <Phone className="w-2.5 h-2.5 mr-1 shrink-0" />
             <span>{service.phone}</span>
           </div>
 
-          <div className="font-extrabold text-amber-600 dark:text-amber-400">
-            {service.price || "৳ 500 / Service"}
+          <div className="font-medium text-slate-500 dark:text-slate-400 text-[10px]">
+            {service.schedule || "Open Today"}
           </div>
         </div>
       </div>

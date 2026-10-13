@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { UserLocation } from "../types";
 import { MapPin, LayoutGrid, Search, ChevronDown } from "lucide-react";
 import { CATEGORIES_LIST } from "../data/servicesData";
+import { getCategories, slugifyCategory } from "../lib/api";
 
 interface AllServicesHeroProps {
   userLocation: UserLocation;
@@ -25,10 +26,36 @@ export const AllServicesHero: React.FC<AllServicesHeroProps> = ({
   onPerformSearch,
 }) => {
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
 
-  const activeCategoryMeta = CATEGORIES_LIST.find(
+  React.useEffect(() => {
+    async function load() {
+      try {
+        const res = await getCategories();
+        if (res && res.length > 0) {
+          setCategories(res);
+        }
+      } catch (e) {}
+    }
+    load();
+  }, []);
+
+  const dynamicCategories = React.useMemo(() => {
+    if (categories.length > 0) {
+      return [
+        { name: "All Services", slug: "all" },
+        ...categories.map((c) => ({
+          name: c.name,
+          slug: slugifyCategory(c.name),
+        })),
+      ];
+    }
+    return CATEGORIES_LIST.map((c) => ({ name: c.name, slug: c.slug }));
+  }, [categories]);
+
+  const activeCategoryMeta = dynamicCategories.find(
     (c) => c.slug === selectedCategory
-  ) || CATEGORIES_LIST[0];
+  ) || dynamicCategories[0];
 
   const handleSelect = (slug: string) => {
     onSelectCategory(slug);
@@ -113,8 +140,8 @@ export const AllServicesHero: React.FC<AllServicesHeroProps> = ({
 
                   {/* Dropdown Menu */}
                   {categoryDropdownOpen && (
-                    <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 z-50 text-slate-900">
-                      {CATEGORIES_LIST.map((cat) => (
+                    <div className="absolute top-full left-0 mt-2 w-64 max-h-72 overflow-y-auto bg-white rounded-2xl shadow-xl border border-slate-100 p-2 z-50 text-slate-900">
+                      {dynamicCategories.map((cat) => (
                         <button
                           key={cat.slug}
                           onClick={() => handleSelect(cat.slug)}
@@ -124,10 +151,7 @@ export const AllServicesHero: React.FC<AllServicesHeroProps> = ({
                               : "hover:bg-slate-50 text-slate-700"
                           }`}
                         >
-                          <span>{cat.name}</span>
-                          <span className="text-[10px] text-slate-400 font-normal">
-                            {cat.count}
-                          </span>
+                          <span className="truncate">{cat.name}</span>
                         </button>
                       ))}
                     </div>

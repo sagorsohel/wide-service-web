@@ -149,10 +149,12 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
               className="w-full h-full object-cover"
             />
 
-            {/* Price Badge Overlay */}
-            <div className="absolute bottom-3 left-3 px-3.5 py-1.5 rounded-xl bg-slate-950/85 backdrop-blur-md text-amber-400 text-sm font-black border border-white/10 shadow-lg">
-              {service.price || "৳ 500 / Service"}
-            </div>
+            {/* Subcategory Badge Overlay */}
+            {service.subcategoryName && (
+              <div className="absolute bottom-3 left-3 px-3.5 py-1.5 rounded-xl bg-slate-950/85 backdrop-blur-md text-amber-400 text-xs font-black border border-white/10 shadow-lg">
+                {service.subcategoryName}
+              </div>
+            )}
 
             {/* Verified Badge */}
             <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-emerald-500/90 text-white text-xs font-bold flex items-center gap-1 shadow-md">
@@ -188,20 +190,24 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
             </h2>
             <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
               <span className="font-bold text-amber-700 dark:text-amber-400">
-                {service.businessName}
+                {service.businessName || service.categoryName}
               </span>
-              <span className="text-slate-300 dark:text-slate-700">•</span>
-              <div className="flex items-center gap-1 text-amber-500 font-extrabold">
-                <Star className="w-4 h-4 fill-amber-400" />
-                <span>{service.rating || 4.9}</span>
-                <span className="text-slate-400 text-xs font-normal">
-                  ({service.reviewCount || 215} reviews)
-                </span>
-              </div>
-              <span className="text-slate-300 dark:text-slate-700">•</span>
-              <span className="text-slate-600 dark:text-slate-400 font-medium text-xs">
-                {service.experience || "8-year Experience"}
-              </span>
+              {service.subcategoryName && (
+                <>
+                  <span className="text-slate-300 dark:text-slate-700">•</span>
+                  <span className="px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-bold text-xs border border-amber-200 dark:border-amber-800">
+                    {service.subcategoryName}
+                  </span>
+                </>
+              )}
+              {distanceKm !== null && (
+                <>
+                  <span className="text-slate-300 dark:text-slate-700">•</span>
+                  <span className="text-slate-600 dark:text-slate-400 font-semibold text-xs">
+                    📍 {formatDistance(distanceKm)}
+                  </span>
+                </>
+              )}
             </div>
           </div>
 

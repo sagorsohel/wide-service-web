@@ -6,13 +6,15 @@ import {
   getCategories,
   getServices,
   sortServicesByDistance,
+  slugifyCategory,
+  getCategoryVisuals,
 } from "../lib/api";
 import { ServiceDetailModal } from "./ServiceDetailModal";
 import {
   Phone,
   MessageCircle,
-  Star,
   MapPin,
+  Clock,
   ShieldCheck,
   ChevronRight,
   Headphones,
@@ -107,6 +109,24 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
     },
   ];
 
+  // Dynamic categories mapped from backend
+  const dynamicCategories = useMemo(() => {
+    if (categories.length > 0) {
+      return categories.slice(0, 8).map((cat) => {
+        const visuals = getCategoryVisuals(cat.name);
+        return {
+          id: String(cat.id),
+          name: cat.name,
+          slug: slugifyCategory(cat.name),
+          count: "",
+          icon: visuals.icon,
+          bgColor: visuals.bgColor,
+        };
+      });
+    }
+    return popularCategories;
+  }, [categories]);
+
   // Load live data from backend API
   useEffect(() => {
     async function loadData() {
@@ -131,8 +151,54 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
     loadData();
   }, [userLocation.latitude, userLocation.longitude]);
 
-  // Featured 4 Nearby Services matching the screenshot exactly
+  // Featured 4 Nearby Services with live backend data
   const featuredCards = useMemo(() => {
+    if (services.length > 0) {
+      let activeList = services;
+      if (selectedCategory) {
+        activeList = services.filter((s) =>
+          (s.categoryName || "")
+            .toLowerCase()
+            .includes(selectedCategory.toLowerCase()),
+        );
+      }
+      if (activeList.length > 0) {
+        const fallbackImages = [
+          "/card_ac.jpg",
+          "/card_plumbing.jpg",
+          "/card_electrical.jpg",
+          "/card_cleaning.jpg",
+        ];
+        return activeList.slice(0, 4).map((s, idx) => {
+          const visuals = getCategoryVisuals(s.categoryName || s.name);
+          return {
+            id: s.id,
+            name: s.name,
+            businessName: s.businessName || s.categoryName || "Local Service",
+            categoryName: s.categoryName || "Home Service",
+            image:
+              (Array.isArray(s.images) && s.images[0]) ||
+              s.logo ||
+              fallbackImages[idx % fallbackImages.length],
+            avatarBg: visuals.bgColor,
+            avatarIcon: visuals.icon,
+            distance: s.distanceKm
+              ? `${s.distanceKm.toFixed(1)} km`
+              : "Near you",
+            schedule: s.schedule || "Open Today",
+            phone: s.phone,
+            whatsapp: s.whatsapp || s.phone,
+            address: s.address,
+            description: s.description || "",
+            latitude: s.latitude,
+            longitude: s.longitude,
+            status: "active" as const,
+            categoryId: s.categoryId,
+          };
+        });
+      }
+    }
+
     const list = [
       {
         id: 101,
@@ -143,14 +209,12 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
         avatarBg: "bg-[#0284c7]",
         avatarIcon: "❄️",
         distance: "1.2 km",
-        rating: 4.9,
-        reviews: 186,
-        price: "৳ 600 / Unit",
+        schedule: "8:00 AM - 10:00 PM",
         phone: "01812345678",
         whatsapp: "8801812345678",
         address: "House 14, Road 7, Dhanmondi, Dhaka",
         description:
-          "Certified technicians for jet cleaning, refrigerant gas leak detection, compressor maintenance, and cooling boost with 15-day service guarantee.",
+          "Certified technicians for jet cleaning, refrigerant gas leak detection, compressor maintenance, and cooling boost.",
         latitude: 23.7461,
         longitude: 90.3742,
         status: "active" as const,
@@ -165,9 +229,7 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
         avatarBg: "bg-[#0891b2]",
         avatarIcon: "💧",
         distance: "2.4 km",
-        rating: 4.8,
-        reviews: 142,
-        price: "৳ 400 / Visit",
+        schedule: "24/7 Emergency Service",
         phone: "01711223344",
         whatsapp: "880171223344",
         address: "Block C, Mirpur 10, Dhaka",
@@ -187,14 +249,12 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
         avatarBg: "bg-[#eab308]",
         avatarIcon: "⚡",
         distance: "3.1 km",
-        rating: 4.7,
-        reviews: 118,
-        price: "৳ 500 / Visit",
+        schedule: "9:00 AM - 9:00 PM",
         phone: "01999887766",
         whatsapp: "8801999887766",
         address: "Gulshan 1 Circle, Dhaka",
         description:
-          "Certified electrician available for circuit breaker repair, short circuit fix, DB board wiring, ceiling fan, and home electrical inspection.",
+          "Certified electrician available for circuit breaker repair, short circuit fix, DB board wiring, and home electrical inspection.",
         latitude: 23.7925,
         longitude: 90.4078,
         status: "active" as const,
@@ -209,9 +269,7 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
         avatarBg: "bg-[#059669]",
         avatarIcon: "🧹",
         distance: "4.2 km",
-        rating: 4.8,
-        reviews: 96,
-        price: "৳ 300 / Hour",
+        schedule: "Available Today",
         phone: "01855667788",
         whatsapp: "8801855667788",
         address: "Sector 3, Uttara, Dhaka",
@@ -227,23 +285,27 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
     if (!selectedCategory) return list;
 
     return list.filter((s) =>
-      s.categoryName.toLowerCase().includes(selectedCategory.toLowerCase())
+      s.categoryName.toLowerCase().includes(selectedCategory.toLowerCase()),
     );
-  }, [selectedCategory]);
+  }, [services, selectedCategory]);
 
   const handleCall = (e: React.MouseEvent, phone: string) => {
     e.stopPropagation();
     window.location.href = `tel:${phone.replace(/[^0-9+]/g, "")}`;
   };
 
-  const handleWhatsapp = (e: React.MouseEvent, whatsapp: string, name: string) => {
+  const handleWhatsapp = (
+    e: React.MouseEvent,
+    whatsapp: string,
+    name: string,
+  ) => {
     e.stopPropagation();
     const clean = whatsapp.replace(/[^0-9]/g, "");
     window.open(
       `https://wa.me/${clean}?text=${encodeURIComponent(
-        `Hello, I would like to book your service "${name}" on Wide Service.`
+        `Hello, I would like to book your service "${name}" on Wide Service.`,
       )}`,
-      "_blank"
+      "_blank",
     );
   };
 
@@ -275,7 +337,7 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
 
           {/* 8-Card Grid matching mockup - Clicking navigates to Single Category page */}
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-3.5">
-            {popularCategories.map((cat) => {
+            {dynamicCategories.map((cat) => {
               return (
                 <Link
                   key={cat.id}
@@ -321,7 +383,10 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
             <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
               <span className="flex items-center gap-1">
                 <MapPin className="w-3.5 h-3.5 text-[#d49b1a]" />
-                <span>Showing services near <strong>{userLocation.city || "Dhaka"}</strong></span>
+                <span>
+                  Showing services near{" "}
+                  <strong>{userLocation.city || "Dhaka"}</strong>
+                </span>
               </span>
               <span>•</span>
               <button
@@ -338,7 +403,9 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
             {featuredCards.map((service) => (
               <div
                 key={service.id}
-                onClick={() => setSelectedService(service as unknown as Service)}
+                onClick={() =>
+                  setSelectedService(service as unknown as Service)
+                }
                 className="bg-white rounded-[22px] border border-slate-200/90 overflow-hidden shadow-2xs hover:shadow-lg transition-all flex flex-col justify-between cursor-pointer group"
               >
                 <div>
@@ -385,20 +452,18 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
                           {service.categoryName}
                         </p>
 
-                        {/* Rating & Reviews */}
-                        <div className="flex items-center gap-1 mt-1 text-xs">
-                          <span className="font-extrabold text-slate-800">
-                            {service.rating}
-                          </span>
-                          <span className="text-amber-400 text-xs">★</span>
-                          <span className="text-[11px] text-slate-400">
-                            ({service.reviews} reviews)
-                          </span>
+                        {/* Location / Address */}
+                        <div className="flex items-center gap-1.5 mt-2 text-[11px] text-slate-500 truncate">
+                          <MapPin className="w-3.5 h-3.5 text-[#d49b1a] shrink-0" />
+                          <span className="truncate">{service.address}</span>
                         </div>
 
-                        {/* Price */}
-                        <div className="mt-1 font-bold text-xs text-[#0f172a]">
-                          {service.price}
+                        {/* Schedule / Availability */}
+                        <div className="flex items-center gap-1.5 mt-1 text-[11px] text-emerald-600 font-semibold truncate">
+                          <Clock className="w-3.5 h-3.5 shrink-0" />
+                          <span className="truncate">
+                            {service.schedule || "Open Today"}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -418,7 +483,9 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
 
                   {/* WhatsApp Button (Emerald Green Pill) */}
                   <button
-                    onClick={(e) => handleWhatsapp(e, service.whatsapp, service.name)}
+                    onClick={(e) =>
+                      handleWhatsapp(e, service.whatsapp, service.name)
+                    }
                     className="flex-1 py-2 px-3 rounded-full bg-[#10b981] hover:bg-[#059669] text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
                   >
                     <MessageCircle className="w-3.5 h-3.5" />
@@ -444,7 +511,8 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
                       <img
                         src={
                           service.logo ||
-                          (Array.isArray(service.images) && service.images[0]) ||
+                          (Array.isArray(service.images) &&
+                            service.images[0]) ||
                           "/card_ac.jpg"
                         }
                         alt={service.name}
@@ -454,7 +522,10 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
                         ✓ Verified
                       </div>
                       <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md bg-white text-slate-800 text-[10px] font-bold">
-                        📍 {service.distanceKm ? `${service.distanceKm.toFixed(1)} km` : "Near you"}
+                        📍{" "}
+                        {service.distanceKm
+                          ? `${service.distanceKm.toFixed(1)} km`
+                          : "Near you"}
                       </div>
                     </div>
 
@@ -465,17 +536,18 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
                       <p className="text-[11px] text-slate-400 truncate">
                         {service.businessName || service.categoryName}
                       </p>
-                      <div className="flex items-center gap-1 mt-1 text-xs">
-                        <span className="font-extrabold text-slate-800">
-                          {service.rating || 4.9}
-                        </span>
-                        <span className="text-amber-400">★</span>
-                        <span className="text-[11px] text-slate-400">
-                          ({service.reviewCount || 120} reviews)
-                        </span>
+                      {/* Location / Address */}
+                      <div className="flex items-center gap-1.5 mt-2 text-[11px] text-slate-500 truncate">
+                        <MapPin className="w-3.5 h-3.5 text-[#d49b1a] shrink-0" />
+                        <span className="truncate">{service.address}</span>
                       </div>
-                      <div className="mt-1 font-bold text-xs text-[#0f172a]">
-                        {service.price || "৳ 500 / Visit"}
+
+                      {/* Schedule / Availability */}
+                      <div className="flex items-center gap-1.5 mt-1 text-[11px] text-emerald-600 font-semibold truncate">
+                        <Clock className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">
+                          {service.schedule || "Open Today"}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -489,7 +561,11 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
                     </button>
                     <button
                       onClick={(e) =>
-                        handleWhatsapp(e, service.whatsapp || service.phone, service.name)
+                        handleWhatsapp(
+                          e,
+                          service.whatsapp || service.phone,
+                          service.name,
+                        )
                       }
                       className="flex-1 py-2 px-3 rounded-full bg-[#10b981] hover:bg-[#059669] text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
                     >
