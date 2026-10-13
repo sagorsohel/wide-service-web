@@ -21,6 +21,8 @@ import {
   Sparkles,
 } from "lucide-react";
 
+import Link from "next/link";
+
 interface LiveServiceDirectoryProps {
   userLocation: UserLocation;
   onOpenLocationPicker: () => void;
@@ -37,11 +39,12 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [showAllServices, setShowAllServices] = useState(false);
 
-  // Exact 8 Popular Categories matching the screenshot
+  // Exact 8 Popular Categories matching the screenshot with navigation slugs
   const popularCategories = [
     {
       id: "ac",
       name: "AC Repair",
+      slug: "ac-repair",
       count: "512+ Services",
       icon: "❄️",
       bgColor: "bg-[#0284c7]",
@@ -49,6 +52,7 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
     {
       id: "plumbing",
       name: "Plumbing",
+      slug: "plumbing",
       count: "420+ Services",
       icon: "💧",
       bgColor: "bg-[#0891b2]",
@@ -56,6 +60,7 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
     {
       id: "electrical",
       name: "Electrical",
+      slug: "electrical",
       count: "389+ Services",
       icon: "⚡",
       bgColor: "bg-[#eab308]",
@@ -63,6 +68,7 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
     {
       id: "cleaning",
       name: "Cleaning",
+      slug: "cleaning",
       count: "312+ Services",
       icon: "🧹",
       bgColor: "bg-[#059669]",
@@ -70,6 +76,7 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
     {
       id: "carpentry",
       name: "Carpentry",
+      slug: "carpentry",
       count: "276+ Services",
       icon: "🔨",
       bgColor: "bg-[#9333ea]",
@@ -77,6 +84,7 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
     {
       id: "cctv",
       name: "CCTV",
+      slug: "cctv",
       count: "198+ Services",
       icon: "📹",
       bgColor: "bg-[#e11d48]",
@@ -84,6 +92,7 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
     {
       id: "appliances",
       name: "Appliances",
+      slug: "appliances",
       count: "167+ Services",
       icon: "🧺",
       bgColor: "bg-[#2563eb]",
@@ -91,6 +100,7 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
     {
       id: "other",
       name: "Other",
+      slug: "other",
       count: "124+ Services",
       icon: "⊞",
       bgColor: "bg-[#64748b]",
@@ -263,31 +273,24 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
             </a>
           </div>
 
-          {/* 8-Card Grid matching mockup */}
+          {/* 8-Card Grid matching mockup - Clicking navigates to Single Category page */}
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-3.5">
             {popularCategories.map((cat) => {
-              const isSelected = selectedCategory === cat.name;
               return (
-                <button
+                <Link
                   key={cat.id}
-                  onClick={() =>
-                    setSelectedCategory(isSelected ? null : cat.name)
-                  }
-                  className={`bg-white rounded-[18px] border p-4 flex flex-col items-center justify-center text-center transition-all cursor-pointer ${
-                    isSelected
-                      ? "border-[#d49b1a] shadow-md ring-2 ring-[#d49b1a]/20 scale-102"
-                      : "border-slate-200/90 hover:border-slate-300 hover:shadow-xs"
-                  }`}
+                  href={`/services/${cat.slug}`}
+                  className="bg-white rounded-[18px] border border-slate-200/90 hover:border-[#d49b1a] p-4 flex flex-col items-center justify-center text-center transition-all cursor-pointer hover:shadow-md hover:scale-102 group"
                 >
                   {/* Colored Round Icon */}
                   <div
-                    className={`w-12 h-12 rounded-full ${cat.bgColor} flex items-center justify-center text-white text-xl mb-3 shadow-2xs`}
+                    className={`w-12 h-12 rounded-full ${cat.bgColor} flex items-center justify-center text-white text-xl mb-3 shadow-2xs group-hover:scale-105 transition-transform`}
                   >
                     {cat.icon}
                   </div>
 
                   {/* Category Name */}
-                  <div className="text-xs font-black text-[#0f172a] leading-tight mb-1 truncate w-full">
+                  <div className="text-xs font-black text-[#0f172a] group-hover:text-[#d49b1a] transition-colors leading-tight mb-1 truncate w-full">
                     {cat.name}
                   </div>
 
@@ -295,7 +298,7 @@ export const LiveServiceDirectory: React.FC<LiveServiceDirectoryProps> = ({
                   <div className="text-[10px] font-medium text-slate-400">
                     {cat.count}
                   </div>
-                </button>
+                </Link>
               );
             })}
           </div>

@@ -31,44 +31,58 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
   const handleFindService = (e: React.FormEvent) => {
     e.preventDefault();
-    onQuickSearch(selectedServiceType);
-    const el = document.getElementById("services");
-    if (el) el.scrollIntoView({ behavior: "smooth" });
+    const slugMap: Record<string, string> = {
+      "AC Repair": "ac-repair",
+      "Plumbing": "plumbing",
+      "Electrical": "electrical",
+      "Cleaning": "cleaning",
+      "Carpentry": "carpentry",
+      "CCTV": "cctv",
+      "Appliances": "appliances",
+    };
+    const slug = slugMap[selectedServiceType] || "ac-repair";
+    window.location.href = `/services/${slug}`;
   };
 
   const floatingServices = [
     {
       name: "AC Repair",
+      slug: "ac-repair",
       desc: "Cool Comfort",
       color: "bg-[#0284c7]",
       icon: "❄️",
     },
     {
       name: "Plumbing",
+      slug: "plumbing",
       desc: "Fix It Right",
       color: "bg-[#0891b2]",
       icon: "💧",
     },
     {
       name: "Electrical",
+      slug: "electrical",
       desc: "Safe & Reliable",
       color: "bg-[#d97706]",
       icon: "⚡",
     },
     {
       name: "Cleaning",
+      slug: "cleaning",
       desc: "Fresh & Clean",
       color: "bg-[#059669]",
       icon: "🧹",
     },
     {
       name: "Carpentry",
+      slug: "carpentry",
       desc: "Build Better",
       color: "bg-[#9333ea]",
       icon: "🔨",
     },
     {
       name: "CCTV",
+      slug: "cctv",
       desc: "Secure Your Home",
       color: "bg-[#e11d48]",
       icon: "📹",
@@ -256,29 +270,25 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <div className="absolute -bottom-4 -right-2 sm:-right-6 z-30 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-100 p-3 w-44 sm:w-48 hidden sm:block">
               <div className="space-y-2">
                 {floatingServices.map((srv) => (
-                  <div
+                  <a
                     key={srv.name}
-                    className="flex items-center gap-2.5 p-1 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer"
-                    onClick={() => {
-                      onQuickSearch(srv.name);
-                      const el = document.getElementById("services");
-                      if (el) el.scrollIntoView({ behavior: "smooth" });
-                    }}
+                    href={`/services/${srv.slug}`}
+                    className="flex items-center gap-2.5 p-1 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer group"
                   >
                     <div
-                      className={`w-7 h-7 rounded-full ${srv.color} flex items-center justify-center text-xs text-white shrink-0 shadow-2xs`}
+                      className={`w-7 h-7 rounded-full ${srv.color} flex items-center justify-center text-xs text-white shrink-0 shadow-2xs group-hover:scale-105 transition-transform`}
                     >
                       {srv.icon}
                     </div>
                     <div className="min-w-0">
-                      <div className="text-[11px] font-extrabold text-slate-900 leading-tight truncate">
+                      <div className="text-[11px] font-extrabold text-slate-900 leading-tight truncate group-hover:text-[#d49b1a] transition-colors">
                         {srv.name}
                       </div>
                       <div className="text-[9px] font-medium text-slate-400 leading-tight">
                         {srv.desc}
                       </div>
                     </div>
-                  </div>
+                  </a>
                 ))}
               </div>
             </div>
