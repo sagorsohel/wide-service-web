@@ -264,13 +264,14 @@ export async function getServices(params?: {
       if (Array.isArray(json.data) && json.data.length > 0) {
         const mapped: Service[] = json.data.map((srv: any, idx: number) => ({
           ...srv,
-          price: srv.price || (idx % 2 === 0 ? "৳ 600 / Service" : "৳ 450 / Service"),
-          rating: srv.rating || 4.8 + (idx % 3) * 0.1,
-          reviewCount: srv.reviewCount || 180 + (idx * 23) % 250,
+          images: Array.isArray(srv.images) && srv.images.length > 0 ? srv.images : [srv.logo || "/hero_technician.jpg"],
+          price: srv.price || (idx % 2 === 0 ? "৳ 600 / Visit" : "৳ 450 / Visit"),
+          rating: srv.rating || 4.8 + ((idx % 3) * 0.1),
+          reviewCount: srv.reviewCount || 120 + ((idx * 23) % 150),
           experience: srv.experience || `${5 + (idx % 8)}-year Experience`,
         }));
 
-        const total = json.pagination?.total || mapped.length;
+        const total = json.total || json.pagination?.total || mapped.length;
         return { services: mapped, total };
       }
     }
@@ -297,4 +298,35 @@ export async function getServices(params?: {
   }
 
   return { services: filtered, total: filtered.length };
+}
+
+/**
+ * Fetch a single service by ID
+ */
+export async function getServiceById(id: number): Promise<Service | null> {
+  try {
+    const res = await fetch(`${BACKEND_BASE_URL}/services/${id}`, {
+      cache: "no-store",
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.data) {
+        const srv = json.data;
+        return {
+          ...srv,
+          images:
+            Array.isArray(srv.images) && srv.images.length > 0
+              ? srv.images
+              : [srv.logo || "/hero_technician.jpg"],
+          price: srv.price || "৳ 550 / Visit",
+          rating: srv.rating || 4.9,
+          reviewCount: srv.reviewCount || 140,
+          experience: srv.experience || "8-year Experience",
+        };
+      }
+    }
+  } catch (err) {
+    console.warn("[Wide Service Web] API getServiceById fallback active:", err);
+  }
+  return FALLBACK_SERVICES.find((s) => s.id === id) || null;
 }

@@ -4,6 +4,7 @@ export interface ServiceCategoryMeta {
   slug: string;
   count: string;
   iconBg: string;
+  backendCategoryId?: number;
   badgeText?: string;
   heroTitle?: string;
   heroSubtitle?: string;
@@ -24,6 +25,7 @@ export const CATEGORIES_LIST: ServiceCategoryMeta[] = [
     id: "ac-repair",
     name: "AC Repair",
     slug: "ac-repair",
+    backendCategoryId: 7,
     count: "212",
     iconBg: "bg-[#0284c7]",
     badgeText: "AC Repair",
@@ -44,6 +46,7 @@ export const CATEGORIES_LIST: ServiceCategoryMeta[] = [
     id: "plumbing",
     name: "Plumbing",
     slug: "plumbing",
+    backendCategoryId: 8,
     count: "248",
     iconBg: "bg-[#0891b2]",
     badgeText: "Plumbing",
@@ -64,6 +67,7 @@ export const CATEGORIES_LIST: ServiceCategoryMeta[] = [
     id: "electrical",
     name: "Electrical",
     slug: "electrical",
+    backendCategoryId: 9,
     count: "242",
     iconBg: "bg-[#eab308]",
     badgeText: "Electrical",
@@ -84,6 +88,7 @@ export const CATEGORIES_LIST: ServiceCategoryMeta[] = [
     id: "cleaning",
     name: "Cleaning",
     slug: "cleaning",
+    backendCategoryId: 10,
     count: "198",
     iconBg: "bg-[#059669]",
     badgeText: "Cleaning",
@@ -104,6 +109,7 @@ export const CATEGORIES_LIST: ServiceCategoryMeta[] = [
     id: "carpentry",
     name: "Carpentry",
     slug: "carpentry",
+    backendCategoryId: 13,
     count: "176",
     iconBg: "bg-[#9333ea]",
     badgeText: "Carpentry",
@@ -123,6 +129,7 @@ export const CATEGORIES_LIST: ServiceCategoryMeta[] = [
     id: "cctv",
     name: "CCTV",
     slug: "cctv",
+    backendCategoryId: 16,
     count: "143",
     iconBg: "bg-[#e11d48]",
     badgeText: "CCTV",
@@ -142,6 +149,7 @@ export const CATEGORIES_LIST: ServiceCategoryMeta[] = [
     id: "appliances",
     name: "Appliances",
     slug: "appliances",
+    backendCategoryId: 11,
     count: "167",
     iconBg: "bg-[#2563eb]",
     badgeText: "Appliances",
@@ -161,6 +169,7 @@ export const CATEGORIES_LIST: ServiceCategoryMeta[] = [
     id: "other",
     name: "Other",
     slug: "other",
+    backendCategoryId: 12,
     count: "124",
     iconBg: "bg-[#64748b]",
     badgeText: "Other",

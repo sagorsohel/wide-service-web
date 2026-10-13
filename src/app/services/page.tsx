@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { UserLocation, Service } from "../../types";
 import { DEFAULT_USER_LOCATION } from "../../lib/cities";
+import { getServices } from "../../lib/api";
 import { Header } from "../../components/Header";
 import { Footer } from "../../components/Footer";
 import { AllServicesHero } from "../../components/AllServicesHero";
@@ -44,19 +45,75 @@ export default function ServicesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedServiceForModal, setSelectedServiceForModal] =
     useState<Service | null>(null);
+  const [liveServices, setLiveServices] = useState<AllServicesCardItem[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(1800);
+  const [loading, setLoading] = useState(false);
 
-  // Filtered Cards
+  // Fetch live backend services on filters/page change
+  useEffect(() => {
+    async function fetchBackendData() {
+      setLoading(true);
+      try {
+        const catMeta = CATEGORIES_LIST.find((c) => c.slug === selectedCategorySlug);
+        const res = await getServices({
+          categoryId: catMeta?.backendCategoryId,
+          search: appliedSearch || undefined,
+          lat: userLocation.latitude,
+          lng: userLocation.longitude,
+          page: currentPage,
+          limit: 12,
+        });
+
+        if (res.services && res.services.length > 0) {
+          const mapped: AllServicesCardItem[] = res.services.map((s: Service, idx: number) => ({
+            id: s.id,
+            name: s.name,
+            category: s.businessName || s.categoryName || "Home Service",
+            categorySlug: selectedCategorySlug !== "all" ? selectedCategorySlug : "other",
+            image: Array.isArray(s.images) && s.images[0] ? s.images[0] : ALL_SERVICES_MOCK_CARDS[idx % ALL_SERVICES_MOCK_CARDS.length].image,
+            rating: s.rating || 4.8,
+            reviews: s.reviewCount || 120,
+            price: s.price || "৳ 500 / Visit",
+            distance: s.distanceKm ? `${s.distanceKm.toFixed(1)} km` : `${(1.2 + (idx % 6) * 1.1).toFixed(1)} km`,
+            phone: s.phone || "01712-345678",
+            whatsapp: s.whatsapp || s.phone || "8801712345678",
+            iconBg: ALL_SERVICES_MOCK_CARDS[idx % ALL_SERVICES_MOCK_CARDS.length].iconBg,
+          }));
+          setLiveServices(mapped);
+          setTotalCount(res.total || mapped.length);
+        } else {
+          setLiveServices([]);
+        }
+      } catch (err) {
+        console.warn("[Wide Service] Backend fetch fallback:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchBackendData();
+  }, [
+    selectedCategorySlug,
+    appliedSearch,
+    currentPage,
+    userLocation.latitude,
+    userLocation.longitude,
+  ]);
+
+  // Cards to display (live backend services with graceful fallback)
   const filteredCards = useMemo(() => {
-    return ALL_SERVICES_MOCK_CARDS.filter((card) => {
-      // Category filter
+    const source = liveServices.length > 0 ? liveServices : ALL_SERVICES_MOCK_CARDS;
+    let result = source.filter((card) => {
+      // Category filter for fallback
       if (
+        liveServices.length === 0 &&
         selectedCategorySlug !== "all" &&
         card.categorySlug !== selectedCategorySlug
       ) {
         return false;
       }
-      // Search query
-      if (appliedSearch.trim()) {
+      // Search query for fallback
+      if (liveServices.length === 0 && appliedSearch.trim()) {
         const q = appliedSearch.toLowerCase();
         const matchesName = card.name.toLowerCase().includes(q);
         const matchesCat = card.category.toLowerCase().includes(q);
@@ -68,7 +125,25 @@ export default function ServicesPage() {
       }
       return true;
     });
-  }, [selectedCategorySlug, appliedSearch, selectedRatingFilter]);
+
+    if (sortBy === "rating") {
+      result = [...result].sort((a, b) => b.rating - a.rating);
+    } else if (sortBy === "price_low") {
+      result = [...result].sort((a, b) => {
+        const pA = parseInt(a.price.replace(/[^0-9]/g, "")) || 0;
+        const pB = parseInt(b.price.replace(/[^0-9]/g, "")) || 0;
+        return pA - pB;
+      });
+    } else if (sortBy === "price_high") {
+      result = [...result].sort((a, b) => {
+        const pA = parseInt(a.price.replace(/[^0-9]/g, "")) || 0;
+        const pB = parseInt(b.price.replace(/[^0-9]/g, "")) || 0;
+        return pB - pA;
+      });
+    }
+
+    return result;
+  }, [liveServices, selectedCategorySlug, appliedSearch, selectedRatingFilter, sortBy]);
 
   const handlePerformSearch = () => {
     setAppliedSearch(searchQuery);

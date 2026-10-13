@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { UserLocation, Service } from "../../../types";
+import { UserLocation, Service, Subcategory } from "../../../types";
 import { DEFAULT_USER_LOCATION } from "../../../lib/cities";
+import { getServices, getSubcategories } from "../../../lib/api";
 import { Header } from "../../../components/Header";
 import { Footer } from "../../../components/Footer";
 import { CategoryHero } from "../../../components/CategoryHero";
@@ -45,6 +46,11 @@ function SingleCategoryContent() {
   const [selectedServiceForModal, setSelectedServiceForModal] =
     useState<Service | null>(null);
 
+  const [liveServices, setLiveServices] = useState<CategoryDetailCardItem[]>([]);
+  const [liveSubcategories, setLiveSubcategories] = useState<Subcategory[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [loading, setLoading] = useState(false);
+
   // Active Category Meta
   const activeCategory = useMemo(() => {
     return (
@@ -53,31 +59,156 @@ function SingleCategoryContent() {
     );
   }, [categorySlug]);
 
-  // Filtered Cards
-  const filteredCards = useMemo(() => {
-    return AC_REPAIR_MOCK_CARDS.filter((card) => {
-      // Subcategory / tag filter
+  // Fetch live subcategories for this category from backend
+  useEffect(() => {
+    async function fetchSubcategories() {
+      if (activeCategory.backendCategoryId) {
+        try {
+          const subs = await getSubcategories(activeCategory.backendCategoryId);
+          setLiveSubcategories(subs);
+        } catch (e) {
+          console.warn("[Wide Service] Subcategories fetch error:", e);
+        }
+      }
+    }
+    fetchSubcategories();
+  }, [activeCategory.backendCategoryId]);
+
+  // Subcategory list strings for the filter bar
+  const subcategoryOptions = useMemo(() => {
+    if (liveSubcategories.length > 0) {
+      return ["All Subcategories", ...liveSubcategories.map((s) => s.name)];
+    }
+    return activeCategory.subcategories;
+  }, [liveSubcategories, activeCategory.subcategories]);
+
+  // Fetch live services for this category from backend
+  useEffect(() => {
+    async function fetchCategoryServices() {
+      setLoading(true);
+      try {
+        let matchedSubId: number | undefined = undefined;
+        if (selectedSubcategory !== "All Subcategories") {
+          const matched = liveSubcategories.find(
+            (s) => s.name.toLowerCase() === selectedSubcategory.toLowerCase()
+          );
+          if (matched) {
+            matchedSubId = matched.id;
+          }
+        }
+
+        const res = await getServices({
+          categoryId: activeCategory.backendCategoryId,
+          subcategoryId: matchedSubId,
+          search: appliedSearch || undefined,
+          lat: userLocation.latitude,
+          lng: userLocation.longitude,
+          page: currentPage,
+          limit: 10,
+        });
+
+        if (res.services && res.services.length > 0) {
+          const mapped: CategoryDetailCardItem[] = res.services.map(
+            (s: Service, idx: number) => ({
+              id: s.id,
+              title: s.name,
+              provider: s.businessName || s.creatorName || activeCategory.name,
+              categorySlug: activeCategory.slug,
+              image:
+                Array.isArray(s.images) && s.images[0]
+                  ? s.images[0]
+                  : s.logo ||
+                    AC_REPAIR_MOCK_CARDS[idx % AC_REPAIR_MOCK_CARDS.length].image,
+              rating: s.rating || 4.9,
+              reviews: s.reviewCount || 120 + ((idx * 23) % 150),
+              price: s.price || "৳ 600 / Unit",
+              distance: s.distanceKm
+                ? `${s.distanceKm.toFixed(1)} km`
+                : `${(1.2 + (idx % 4) * 0.8).toFixed(1)} km`,
+              phone: s.phone || "01712-345678",
+              whatsapp: s.whatsapp || s.phone || "8801712345678",
+              tags: [
+                s.subcategoryName || activeCategory.name,
+                "Verified Technician",
+                "7-Day Warranty",
+              ],
+            })
+          );
+          setLiveServices(mapped);
+          setTotalCount(res.total || mapped.length);
+        } else {
+          setLiveServices([]);
+          setTotalCount(0);
+        }
+      } catch (err) {
+        console.warn("[Wide Service] Category services fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchCategoryServices();
+  }, [
+    activeCategory.backendCategoryId,
+    activeCategory.name,
+    selectedSubcategory,
+    appliedSearch,
+    currentPage,
+    userLocation.latitude,
+    userLocation.longitude,
+    liveSubcategories,
+  ]);
+
+  // Filtered Cards: backend data with graceful fallback to mockup cards
+  const displayCards = useMemo(() => {
+    const source =
+      liveServices.length > 0 ? liveServices : AC_REPAIR_MOCK_CARDS;
+
+    let filtered = source.filter((card) => {
+      // Subcategory / tag filter (when fallback is active)
       if (
+        liveServices.length === 0 &&
         selectedSubcategory !== "All Subcategories" &&
         !card.tags.some((t) =>
           selectedSubcategory.toLowerCase().includes(t.toLowerCase())
         )
       ) {
-        // If subcategory doesn't match directly, keep visible or filter
+        return false;
       }
 
-      // Search query
-      if (appliedSearch.trim()) {
+      // Search query (when fallback is active)
+      if (liveServices.length === 0 && appliedSearch.trim()) {
         const q = appliedSearch.toLowerCase();
         const matchesTitle = card.title.toLowerCase().includes(q);
         const matchesProvider = card.provider.toLowerCase().includes(q);
-        const matchesTags = card.tags.some((t) => t.toLowerCase().includes(q));
+        const matchesTags = card.tags.some((t) =>
+          t.toLowerCase().includes(q)
+        );
         if (!matchesTitle && !matchesProvider && !matchesTags) return false;
       }
 
       return true;
     });
-  }, [selectedSubcategory, appliedSearch]);
+
+    // Sorting
+    if (sortBy === "rating") {
+      filtered = [...filtered].sort((a, b) => b.rating - a.rating);
+    } else if (sortBy === "price_low") {
+      filtered = [...filtered].sort((a, b) => {
+        const pA = parseInt(a.price.replace(/[^0-9]/g, "")) || 0;
+        const pB = parseInt(b.price.replace(/[^0-9]/g, "")) || 0;
+        return pA - pB;
+      });
+    } else if (sortBy === "price_high") {
+      filtered = [...filtered].sort((a, b) => {
+        const pA = parseInt(a.price.replace(/[^0-9]/g, "")) || 0;
+        const pB = parseInt(b.price.replace(/[^0-9]/g, "")) || 0;
+        return pB - pA;
+      });
+    }
+
+    return filtered;
+  }, [liveServices, selectedSubcategory, appliedSearch, sortBy]);
 
   const handleCardClick = (card: CategoryDetailCardItem) => {
     const srv: Service = {
@@ -149,7 +280,7 @@ function SingleCategoryContent() {
         <CategoryFilterBar
           userLocation={userLocation}
           onOpenLocationPicker={() => setIsLocationPickerOpen(true)}
-          subcategories={activeCategory.subcategories}
+          subcategories={subcategoryOptions}
           selectedSubcategory={selectedSubcategory}
           onSelectSubcategory={setSelectedSubcategory}
           selectedPriceRange={selectedPriceRange}
@@ -293,7 +424,7 @@ function SingleCategoryContent() {
                   <h2 className="text-base sm:text-lg font-black text-[#0f172a] tracking-tight">
                     {activeCategory.name} Services{" "}
                     <span className="text-slate-400 font-medium text-xs sm:text-sm">
-                      ({activeCategory.count} found)
+                      ({totalCount > 0 ? `${totalCount}+ found` : `${displayCards.length} found`})
                     </span>
                   </h2>
                 </div>
@@ -316,9 +447,9 @@ function SingleCategoryContent() {
                 </div>
               </div>
 
-              {/* 2-Column Detailed Category Cards Grid matching Right Mockup (6 cards) */}
+              {/* 2-Column Detailed Category Cards Grid matching Right Mockup */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {filteredCards.map((card) => (
+                {displayCards.map((card) => (
                   <div
                     key={card.id}
                     onClick={() => handleCardClick(card)}
@@ -408,7 +539,7 @@ function SingleCategoryContent() {
                 ))}
               </div>
 
-              {/* Pagination matching Right Mockup: < 1 2 3 4 5 ... 15 > */}
+              {/* Pagination matching Right Mockup: < 1 2 3 4 5 ... max > */}
               <div className="flex items-center justify-center gap-2 pt-6 pb-2">
                 <button
                   disabled={currentPage === 1}
@@ -446,7 +577,7 @@ function SingleCategoryContent() {
                 </button>
 
                 <button
-                  onClick={() => setCurrentPage((p) => Math.min(15, p + 1))}
+                  onClick={() => setCurrentPage((p) => p + 1)}
                   className="w-8 h-8 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:bg-slate-50 cursor-pointer"
                 >
                   <ChevronRight className="w-4 h-4" />
