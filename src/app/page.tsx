@@ -124,7 +124,7 @@ export default function Home() {
 
             {/* Main Content */}
             <main className="flex-1">
-              {/* 2. Hero Section: Find Trusted Home Service Technicians */}
+              {/* 1. Hero Section: Find Trusted Home Service Technicians */}
               <HeroSection
                 userLocation={userLocation}
                 onOpenLocationPicker={() => setIsLocationPickerOpen(true)}
@@ -132,20 +132,33 @@ export default function Home() {
                 onQuickSearch={handleQuickSearch}
               />
 
-              {/* 3. Live Service Directory: Popular Categories (8) + Nearby Services (4) + 4 Pillars Bar */}
+              {/* 2. Popular Service Categories (8) + Nearby Services (4) */}
               <LiveServiceDirectory
                 userLocation={userLocation}
                 onOpenLocationPicker={() => setIsLocationPickerOpen(true)}
               />
 
-              {/* 4. Trusted by Thousands / How It Works (4 Steps) */}
-              <HowItWorks />
+              {/* 3. Simple Steps / How It Works (4 Steps) */}
+              <HowItWorks
+                id="how-it-works"
+                pill="Simple Steps"
+                title="How It Works"
+                subtitle="Get your service done in just a few simple steps. Fast, easy and reliable."
+              />
 
-              {/* 5. Fast Services, Trusted Care (AC Tech + 4 Cards) */}
-              <WhyChooseUsSection />
-
-              {/* 6. Get Services on Your Mobile (Dual Phones Mockup + Badges + 5 Checks) */}
+              {/* 4. Get Services on Your Mobile (Dual Phones Mockup + Badges + 5 Checks) */}
               <AppDownloadSection />
+
+              {/* 5. Why Choose Us / Trusted by Thousands (4 Steps) */}
+              <HowItWorks
+                id="trusted-by-thousands"
+                pill="Why Choose Us"
+                title="Trusted by Thousands"
+                subtitle="We are service platform providing a few simple steps. Fast, easy, safety and convenience."
+              />
+
+              {/* 6. Fast Services, Trusted Care (AC Tech + 4 Cards) */}
+              <WhyChooseUsSection />
 
               {/* 7. Real Stories, Real Satisfaction (3 Customer Reviews with 5 Stars) */}
               <TestimonialsSection />

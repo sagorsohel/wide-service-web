@@ -63,17 +63,20 @@ export const WhyChooseUsSection: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
           {/* Left Column: Heading, Subtitle & 4 Cards (7.5 cols) */}
           <div className="lg:col-span-8 space-y-6">
-            {/* Pill Badge matching Image 2 */}
-           
+            {/* Pill Badge matching Master Mockup */}
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fef3c7] border border-[#fde68a] text-slate-800 text-xs font-semibold">
+              <span className="text-[#d49b1a] text-xs">⚡</span>
+              <span>Why Choose Us</span>
+            </div>
 
-            {/* Stylized Heading matching Image 2 */}
+            {/* Stylized Heading */}
             <h2 className="text-3xl sm:text-4xl font-black text-[#0f172a] tracking-tight leading-tight">
               Fast Services, Trusted Care
             </h2>
 
             {/* Subtitle */}
             <p className="text-sm sm:text-[15px] text-slate-500 max-w-2xl leading-relaxed font-normal">
-              We are committed to providing the best service experience with quality, safety and convenience.
+              We are committed to providing the best home service experience with quality, safety and convenience.
             </p>
 
             {/* 4 Feature Cards Row matching Image 2 */}
