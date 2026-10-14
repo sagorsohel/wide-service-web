@@ -91,13 +91,15 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Mobile Shell Frame */}
-          <div className="w-full max-w-md bg-white rounded-[32px] overflow-hidden shadow-2xl border-4 border-slate-700">
-            <MobileAppExperience
-              userLocation={userLocation}
-              onOpenLocationPicker={() => setIsLocationPickerOpen(true)}
-              onOpenDownload={handleOpenDownload}
-            />
+          {/* Mobile Shell Frame (Scrollable Phone Mockup Container) */}
+          <div className="w-full max-w-md bg-white rounded-[36px] overflow-hidden shadow-2xl border-4 border-slate-700 h-[844px] max-h-[86vh] flex flex-col relative [transform:translateZ(0)]">
+            <div className="flex-1 overflow-y-auto relative no-scrollbar">
+              <MobileAppExperience
+                userLocation={userLocation}
+                onOpenLocationPicker={() => setIsLocationPickerOpen(true)}
+                onOpenDownload={handleOpenDownload}
+              />
+            </div>
           </div>
         </div>
       ) : (

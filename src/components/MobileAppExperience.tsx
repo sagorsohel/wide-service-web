@@ -65,12 +65,17 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
   // - selectedCategory && !selectedSubcategory: CategoryDetailScreen
   // - selectedCategory && selectedSubcategory: SubcategoryDetailScreen
   // - selectedService: ServiceDetailScreen
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [selectedSubcategory, setSelectedSubcategory] = useState<Subcategory | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
+    null,
+  );
+  const [selectedSubcategory, setSelectedSubcategory] =
+    useState<Subcategory | null>(null);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
 
-  // Tab State: "home" | "setting"
-  const [activeTab, setActiveTab] = useState<"home" | "setting">("home");
+  // Tab State: "home" | "find" | "setting"
+  const [activeTab, setActiveTab] = useState<"home" | "find" | "setting">(
+    "home",
+  );
 
   // Filter & Data States
   const [categories, setCategories] = useState<Category[]>([]);
@@ -170,6 +175,14 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleGoFind = () => {
+    setSelectedService(null);
+    setSelectedSubcategory(null);
+    setSelectedCategory(null);
+    setActiveTab("find");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const handleGoSettings = () => {
     setSelectedService(null);
     setSelectedSubcategory(null);
@@ -188,7 +201,9 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
   // Filter services for CategoryDetailScreen by Category & Radius
   const categoryServices = useMemo(() => {
     if (!selectedCategory) return [];
-    const catList = services.filter((s) => s.categoryId === selectedCategory.id);
+    const catList = services.filter(
+      (s) => s.categoryId === selectedCategory.id,
+    );
     const sorted = sortServicesByDistance(catList, userLocation);
     if (selectedRadius === null) return sorted;
     return sorted.filter((s) => (s.distanceKm ?? 999) <= selectedRadius);
@@ -197,7 +212,9 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
   // Filter services for SubcategoryDetailScreen by Subcategory & Radius
   const subcategoryServices = useMemo(() => {
     if (!selectedSubcategory) return [];
-    const subList = services.filter((s) => s.subcategoryId === selectedSubcategory.id);
+    const subList = services.filter(
+      (s) => s.subcategoryId === selectedSubcategory.id,
+    );
     const sorted = sortServicesByDistance(subList, userLocation);
     if (selectedRadius === null) return sorted;
     return sorted.filter((s) => (s.distanceKm ?? 999) <= selectedRadius);
@@ -221,7 +238,7 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
     }
     const cleanNumber = whatsapp.replace(/[^0-9]/g, "");
     const msg = encodeURIComponent(
-      `Hello, I found "${serviceName || "your service"}" on Wide Service. I want to book an appointment.`
+      `Hello, I found "${serviceName || "your service"}" on Wide Service. I want to book an appointment.`,
     );
     window.open(`https://wa.me/${cleanNumber}?text=${msg}`, "_blank");
   };
@@ -254,8 +271,9 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
     if (Array.isArray(selectedService.images)) {
       list.push(
         ...selectedService.images.filter(
-          (img): img is string => typeof img === "string" && Boolean(img.trim())
-        )
+          (img): img is string =>
+            typeof img === "string" && Boolean(img.trim()),
+        ),
       );
     } else if (typeof selectedService.images === "string") {
       try {
@@ -263,8 +281,9 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
         if (Array.isArray(parsed)) {
           list.push(
             ...parsed.filter(
-              (img): img is string => typeof img === "string" && Boolean(img.trim())
-            )
+              (img): img is string =>
+                typeof img === "string" && Boolean(img.trim()),
+            ),
           );
         }
       } catch {
@@ -272,7 +291,7 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
           ...selectedService.images
             .split(",")
             .map((s) => s.trim())
-            .filter(Boolean)
+            .filter(Boolean),
         );
       }
     }
@@ -287,7 +306,9 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
     }
 
     if (list.length > 0) return list;
-    return ["https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800"];
+    return [
+      "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800",
+    ];
   }, [selectedService]);
 
   // Service distance for ServiceDetailScreen
@@ -304,16 +325,38 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
         userLocation.latitude,
         userLocation.longitude,
         selectedService.latitude,
-        selectedService.longitude
+        selectedService.longitude,
       );
     }
     return null;
   }, [selectedService, userLocation]);
 
-  // Flag indicating if Home is currently active
+  // Services list for Find tab (with live search & radius filtering)
+  const findServicesList = useMemo(() => {
+    let list = services;
+    if (selectedRadius !== null) {
+      list = list.filter((s) => (s.distanceKm ?? 999) <= selectedRadius);
+    }
+    const withDist = sortServicesByDistance(list, userLocation);
+    if (!searchQuery.trim()) return withDist;
+    const q = searchQuery.toLowerCase().trim();
+    return withDist.filter(
+      (s) =>
+        s.name.toLowerCase().includes(q) ||
+        (s.businessName && s.businessName.toLowerCase().includes(q)) ||
+        (s.categoryName && s.categoryName.toLowerCase().includes(q)) ||
+        (s.subcategoryName && s.subcategoryName.toLowerCase().includes(q)) ||
+        s.address.toLowerCase().includes(q),
+    );
+  }, [services, selectedRadius, userLocation, searchQuery]);
+
+  // Active Tab flags
   const isHomeActive =
     activeTab === "home" && !selectedCategory && !selectedService;
-  const isSettingsActive = activeTab === "setting";
+  const isFindActive =
+    activeTab === "find" && !selectedCategory && !selectedService;
+  const isSettingsActive =
+    activeTab === "setting" && !selectedCategory && !selectedService;
 
   return (
     <div className="w-full bg-[#f8fafc] min-h-screen flex flex-col font-sans select-none text-slate-900 relative">
@@ -322,18 +365,21 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
           ========================================================================= */}
       {selectedService ? (
         <div className="w-full min-h-screen flex flex-col pb-36 text-slate-900">
-          {/* Golden Header matching app/App.tsx */}
-          <div className="bg-[#e0b328] px-4 pt-3 pb-3 sticky top-0 z-30 shadow-sm flex items-center justify-between">
+          {/* Sticky Header (Clean Light Mode) */}
+          <div
+            className="bg-[#e0b328] backdrop-blur-md border-b border-slate-200/80 px-4 pt-3 pb-3 sticky top-0 z-40 shadow-xs flex items-center justify-between"
+            style={{ position: "sticky", top: 0, zIndex: 40 }}
+          >
             <button
               onClick={() => setSelectedService(null)}
-              className="w-10 h-10 rounded-full bg-black/10 hover:bg-black/20 flex items-center justify-center text-slate-950 transition-colors cursor-pointer"
+              className="w-10 h-10 rounded-full bg-black/10 hover:bg-slate-200 flex items-center justify-center text-slate-800 transition-colors cursor-pointer"
               title="Back"
             >
               <ChevronLeft className="w-6 h-6 stroke-[2.6]" />
             </button>
 
             <div className="flex-1 px-3 text-center truncate">
-              <h2 className="text-sm font-black text-slate-950 truncate tracking-tight">
+              <h2 className="text-sm font-black text-slate-900 truncate tracking-tight">
                 {selectedService.name}
               </h2>
             </div>
@@ -341,7 +387,7 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => handleShare(selectedService)}
-                className="w-10 h-10 rounded-full bg-black/10 hover:bg-black/20 flex items-center justify-center text-slate-950 transition-colors cursor-pointer"
+                className="w-10 h-10 rounded-full bg-black/10 hover:bg-slate-200 flex items-center justify-center text-slate-800 transition-colors cursor-pointer"
                 title="Share"
               >
                 <Share2 className="w-4 h-4 stroke-[2.4]" />
@@ -359,53 +405,12 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
           {/* Content Container */}
           <div className="flex-1 bg-white">
             {/* 1. Image Gallery Showcase */}
-            <div className="relative w-full aspect-4/3 bg-slate-900 overflow-hidden">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={serviceGalleryImages[activeImageIndex]}
-                alt={selectedService.name}
-                className="w-full h-full object-cover transition-all duration-300"
-              />
-
-              {/* Prev / Next Arrows */}
-              {serviceGalleryImages.length > 1 && (
-                <>
-                  <button
-                    onClick={() =>
-                      setActiveImageIndex((prev) =>
-                        prev === 0 ? serviceGalleryImages.length - 1 : prev - 1
-                      )
-                    }
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-colors cursor-pointer"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() =>
-                      setActiveImageIndex((prev) =>
-                        prev === serviceGalleryImages.length - 1 ? 0 : prev + 1
-                      )
-                    }
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-colors cursor-pointer"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </>
-              )}
-
-              {/* Image Counter Badge */}
-              {serviceGalleryImages.length > 1 && (
-                <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-xs text-white text-[11px] font-black">
-                  {activeImageIndex + 1} / {serviceGalleryImages.length}
-                </div>
-              )}
-            </div>
 
             {/* 2. Primary Service Details */}
             <div className="p-4 sm:p-5 border-b border-slate-100">
               {/* Category & Distance Pills */}
               <div className="flex items-center gap-2 flex-wrap mb-2.5">
-                {selectedService.categoryName && (
+                {/* {selectedService.categoryName && (
                   <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-900 text-[11px] font-black">
                     {selectedService.categoryName}
                   </span>
@@ -414,7 +419,7 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                   <span className="px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-bold">
                     {selectedService.subcategoryName}
                   </span>
-                )}
+                )} */}
                 {serviceDistanceKm !== null && (
                   <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-black flex items-center gap-1">
                     <span>⚡</span>
@@ -436,7 +441,8 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs font-black text-slate-900 truncate">
-                      {selectedService.businessName || "Verified Service Partner"}
+                      {selectedService.businessName ||
+                        "Verified Service Partner"}
                     </span>
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                   </div>
@@ -459,7 +465,7 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                   onClick={() =>
                     handleWhatsApp(
                       selectedService.whatsapp || selectedService.phone,
-                      selectedService.name
+                      selectedService.name,
                     )
                   }
                   className="py-3 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-black text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95 cursor-pointer"
@@ -492,7 +498,9 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
               <div className="flex items-start gap-2.5">
                 <MapPin className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <div>
-                  <div className="text-xs font-bold text-slate-900">Address</div>
+                  <div className="text-xs font-bold text-slate-900">
+                    Address
+                  </div>
                   <div className="text-xs text-slate-600 leading-relaxed font-medium">
                     {selectedService.address}
                   </div>
@@ -503,38 +511,82 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
               <div className="flex items-start gap-2.5">
                 <Clock className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                 <div>
-                  <div className="text-xs font-bold text-slate-900">Working Hours</div>
+                  <div className="text-xs font-bold text-slate-900">
+                    Working Hours
+                  </div>
                   <div className="text-xs text-slate-600 font-medium">
-                    {selectedService.schedule || "Open Everyday: 8:00 AM - 10:00 PM"}
+                    {selectedService.schedule ||
+                      "Open Everyday: 8:00 AM - 10:00 PM"}
                   </div>
                 </div>
               </div>
             </div>
+            <div className="relative w-full aspect-4/3 bg-slate-900 overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={serviceGalleryImages[activeImageIndex]}
+                alt={selectedService.name}
+                className="w-full h-full object-cover transition-all duration-300"
+              />
 
+              {/* Prev / Next Arrows */}
+              {serviceGalleryImages.length > 1 && (
+                <>
+                  <button
+                    onClick={() =>
+                      setActiveImageIndex((prev) =>
+                        prev === 0 ? serviceGalleryImages.length - 1 : prev - 1,
+                      )
+                    }
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() =>
+                      setActiveImageIndex((prev) =>
+                        prev === serviceGalleryImages.length - 1 ? 0 : prev + 1,
+                      )
+                    }
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </>
+              )}
+
+              {/* Image Counter Badge */}
+              {serviceGalleryImages.length > 1 && (
+                <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-xs text-white text-[11px] font-black">
+                  {activeImageIndex + 1} / {serviceGalleryImages.length}
+                </div>
+              )}
+            </div>
             {/* 5. Live Radar Map Embed */}
-            {selectedService.latitude != null && selectedService.longitude != null && (
-              <div className="p-4 sm:p-5">
-                <div className="flex items-center justify-between mb-2.5">
-                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-400">
-                    Technician Live Location
-                  </h3>
-                  <span className="text-[11px] font-bold text-amber-700 flex items-center gap-1">
-                    <Compass className="w-3 h-3" />
-                    <span>GPS Radar</span>
-                  </span>
+            {selectedService.latitude != null &&
+              selectedService.longitude != null && (
+                <div className="p-4 sm:p-5">
+                  <div className="flex items-center justify-between mb-2.5">
+                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-400">
+                      Technician Live Location
+                    </h3>
+                    <span className="text-[11px] font-bold text-amber-700 flex items-center gap-1">
+                      <Compass className="w-3 h-3" />
+                      <span>GPS Radar</span>
+                    </span>
+                  </div>
+                  <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-xs">
+                    <ServiceMapEmbed
+                      serviceLat={Number(selectedService.latitude)}
+                      serviceLng={Number(selectedService.longitude)}
+                      serviceName={selectedService.name}
+                      userLat={userLocation.latitude}
+                      userLng={userLocation.longitude}
+                      height={220}
+                    />
+                  </div>
                 </div>
-                <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-xs">
-                  <ServiceMapEmbed
-                    serviceLat={Number(selectedService.latitude)}
-                    serviceLng={Number(selectedService.longitude)}
-                    serviceName={selectedService.name}
-                    userLat={userLocation.latitude}
-                    userLng={userLocation.longitude}
-                    height={220}
-                  />
-                </div>
-              </div>
-            )}
+              )}
           </div>
 
           {/* Floating Bottom Booking Bar (Docked right above the persistent bottom navigation bar) */}
@@ -551,7 +603,7 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                 onClick={() =>
                   handleWhatsApp(
                     selectedService.whatsapp || selectedService.phone,
-                    selectedService.name
+                    selectedService.name,
                   )
                 }
                 className="w-11 h-11 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white flex items-center justify-center shadow-md active:scale-95 transition-all cursor-pointer shrink-0"
@@ -566,13 +618,16 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
         /* =========================================================================
            VIEW 2: SUBCATEGORY DETAIL SCREEN
            ========================================================================= */
-        <div className="w-full bg-[#e0b328] min-h-screen flex flex-col font-sans select-none pb-28">
-          {/* Golden Header */}
-          <div className="px-4 pt-3 pb-4">
+        <div className="w-full bg-[#f8fafc] min-h-screen flex flex-col font-sans select-none pb-28">
+          {/* Sticky Fixed Header (Light Mode, No Yellow) */}
+          <div
+            className="sticky top-0 z-40 bg-[#e0b328] backdrop-blur-md border-b border-slate-200/80 px-4 pt-3 pb-3 shadow-xs"
+            style={{ position: "sticky", top: 0, zIndex: 40 }}
+          >
             <div className="flex items-center justify-between">
               <button
                 onClick={() => setSelectedSubcategory(null)}
-                className="w-10 h-10 rounded-full bg-black/10 hover:bg-black/20 flex items-center justify-center text-slate-950 transition-colors cursor-pointer -ml-1"
+                className="w-10 h-10 rounded-full bg-black/10 hover:bg-slate-200 flex items-center justify-center text-slate-800 transition-colors cursor-pointer -ml-1"
                 title="Back"
               >
                 <ChevronLeft className="w-6 h-6 stroke-[2.6]" />
@@ -580,7 +635,7 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
 
               {/* Emblem & Title */}
               <div className="flex-1 px-2 flex items-center justify-center truncate">
-                <div className="w-8 h-8 rounded-xl bg-white/80 border border-white flex items-center justify-center mr-2 shadow-xs shrink-0 overflow-hidden">
+                <div className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200/90 flex items-center justify-center mr-2 shadow-xs shrink-0 overflow-hidden">
                   {selectedSubcategory.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -593,10 +648,10 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                   )}
                 </div>
                 <div className="truncate text-left">
-                  <h2 className="text-base font-black text-slate-950 tracking-tight truncate leading-tight">
+                  <h2 className="text-base font-black text-slate-900 tracking-tight truncate leading-tight">
                     {selectedSubcategory.name}
                   </h2>
-                  <div className="text-[10px] font-bold text-slate-800/80 truncate">
+                  <div className="text-[10px] font-bold text-slate-500 truncate">
                     {selectedCategory.name}
                   </div>
                 </div>
@@ -606,8 +661,8 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
             </div>
           </div>
 
-          {/* Curvy Light Content Body */}
-          <div className="flex-1 bg-[#f8fafc] rounded-t-[32px] pt-4 px-4 pb-12 shadow-md">
+          {/* Light Content Body */}
+          <div className="flex-1 bg-[#f8fafc] pt-4 px-4 pb-12">
             {/* Proximity / Distance Radius Chips Bar */}
             <div className="mb-4">
               <div className="flex items-center justify-between mb-2 px-1">
@@ -695,16 +750,19 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
         /* =========================================================================
            VIEW 3: CATEGORY DETAIL SCREEN
            ========================================================================= */
-        <div className="w-full bg-[#e0b328] min-h-screen flex flex-col font-sans select-none pb-28">
-          {/* Golden Header */}
-          <div className="px-4 pt-3 pb-4">
+        <div className="w-full bg-[#f8fafc] min-h-screen flex flex-col font-sans select-none pb-28">
+          {/* Sticky Fixed Header (Light Mode, No Yellow) */}
+          <div
+            className="sticky top-0 z-40 bg-[#e0b328] backdrop-blur-md border-b border-slate-200/80 px-4 pt-3 pb-3 shadow-xs"
+            style={{ position: "sticky", top: 0, zIndex: 40 }}
+          >
             <div className="flex items-center justify-between">
               <button
                 onClick={() => {
                   setSelectedCategory(null);
                   setSelectedSubcategory(null);
                 }}
-                className="w-10 h-10 rounded-full bg-black/10 hover:bg-black/20 flex items-center justify-center text-slate-950 transition-colors cursor-pointer -ml-1"
+                className="w-10 h-10 rounded-full bg-black/10 hover:bg-slate-200 flex items-center justify-center text-slate-800 transition-colors cursor-pointer -ml-1"
                 title="Back"
               >
                 <ChevronLeft className="w-6 h-6 stroke-[2.6]" />
@@ -712,7 +770,7 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
 
               {/* Emblem & Title */}
               <div className="flex-1 px-2 flex items-center justify-center truncate">
-                <div className="w-8 h-8 rounded-xl bg-white/80 border border-white flex items-center justify-center mr-2 shadow-xs shrink-0 overflow-hidden">
+                <div className="w-8 h-8 rounded-xl bg-black border border-slate-200/90 flex items-center justify-center mr-2 shadow-xs shrink-0 overflow-hidden">
                   {selectedCategory.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -724,7 +782,7 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                     <span className="text-sm">🛠️</span>
                   )}
                 </div>
-                <h2 className="text-base font-black text-slate-950 tracking-tight truncate">
+                <h2 className="text-base font-black text-slate-900 tracking-tight truncate">
                   {selectedCategory.name}
                 </h2>
               </div>
@@ -733,8 +791,8 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
             </div>
           </div>
 
-          {/* Curvy Light Content Body */}
-          <div className="flex-1 bg-[#f8fafc] rounded-t-[32px] pt-5 px-4 pb-12 shadow-md">
+          {/* Light Content Body */}
+          <div className="flex-1 bg-[#f8fafc] pt-5 px-4 pb-12">
             {/* Subcategories 2-Column Grid */}
             <div className="mb-5">
               <div className="flex items-center justify-between mb-3 px-1">
@@ -874,13 +932,127 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
             </div>
           </div>
         </div>
+      ) : activeTab === "find" ? (
+        /* =========================================================================
+           VIEW: FIND SERVICES SCREEN
+           ========================================================================= */
+        <div className="w-full min-h-screen flex flex-col font-sans select-none pb-28 text-slate-900 bg-[#f8fafc]">
+          {/* Top Sticky Header */}
+          <div
+            className="sticky top-0 z-40 bg-[#f8fafc]/95 backdrop-blur-md border-b border-slate-200/90 px-4 pt-3 pb-3 shadow-2xs"
+            style={{ position: "sticky", top: 0, zIndex: 40 }}
+          >
+            <div className="flex items-center justify-between mb-2.5 px-0.5">
+              <div>
+                <h1 className="text-xl font-black text-slate-950 tracking-tight">
+                  Find Services
+                </h1>
+                <button
+                  onClick={onOpenLocationPicker}
+                  className="flex items-center text-xs font-bold text-slate-500 hover:text-amber-700 transition-colors mt-0.5 cursor-pointer"
+                >
+                  <MapPin className="w-3.5 h-3.5 text-[#e0b328] mr-1 shrink-0" />
+                  <span className="truncate max-w-[200px]">
+                    {userLocation.area ||
+                      userLocation.city ||
+                      "Dhaka, Bangladesh"}
+                  </span>
+                </button>
+              </div>
+
+              <span className="text-[10px] font-black text-amber-900 bg-amber-100 px-2.5 py-1 rounded-full border border-amber-300">
+                ⚡ Closest First
+              </span>
+            </div>
+
+            {/* Live Search Input Box */}
+            <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs flex items-center px-3.5 py-2.5 mb-2.5">
+              <Search className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search service, category, or technician..."
+                className="flex-1 text-xs text-slate-800 font-medium px-2 py-0 bg-transparent focus:outline-none"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="text-xs text-slate-400 font-bold p-1 hover:text-slate-600 cursor-pointer"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Radius Filter Chips */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+              {RADIUS_OPTIONS.map((opt) => {
+                const isActive = selectedRadius === opt.value;
+                return (
+                  <button
+                    key={opt.label}
+                    onClick={() => setSelectedRadius(opt.value)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                      isActive
+                        ? "bg-[#e0b328] text-slate-950 shadow-xs border border-amber-500 font-black"
+                        : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Services List */}
+          <div className="px-4 pt-4 flex-1 space-y-3">
+            {loading && services.length === 0 ? (
+              [1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-2xl p-3.5 border border-slate-200 animate-pulse flex items-center gap-3"
+                >
+                  <div className="w-14 h-14 rounded-2xl bg-slate-200 shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3.5 bg-slate-200 rounded w-3/4" />
+                    <div className="h-3 bg-slate-200 rounded w-1/2" />
+                  </div>
+                </div>
+              ))
+            ) : findServicesList.length > 0 ? (
+              findServicesList.map((srv) => (
+                <ServiceCard
+                  key={srv.id}
+                  service={srv}
+                  userLocation={userLocation}
+                  onSelect={(s) => setSelectedService(s)}
+                />
+              ))
+            ) : (
+              <div className="p-8 text-center bg-white rounded-3xl border border-slate-200 mt-2">
+                <span className="text-3xl block mb-2">🔍</span>
+                <h3 className="text-sm font-extrabold text-slate-900 mb-1">
+                  No services found
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Try adjusting your search query or radius filter.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
       ) : activeTab === "setting" ? (
         /* =========================================================================
            VIEW 4: SETTINGS SCREEN
            ========================================================================= */
         <div className="w-full bg-[#f8fafc] min-h-screen flex flex-col font-sans select-none pb-28 text-slate-900">
           {/* Settings Header */}
-          <div className="px-5 pt-4 pb-3 bg-white border-b border-slate-100 sticky top-0 z-30 shadow-2xs">
+          <div
+            className="px-5 pt-4 pb-3 bg-white/95 backdrop-blur-md border-b border-slate-100 sticky top-0 z-30 shadow-2xs"
+            style={{ position: "sticky", top: 0, zIndex: 30 }}
+          >
             <h2 className="text-xl font-black text-slate-950 tracking-tight">
               Settings
             </h2>
@@ -951,8 +1123,12 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                   <div className="flex items-center gap-3">
                     <Globe className="w-4 h-4 text-slate-500" />
                     <div>
-                      <div className="text-xs font-bold text-slate-900">Language</div>
-                      <div className="text-[11px] text-slate-400">English (Default)</div>
+                      <div className="text-xs font-bold text-slate-900">
+                        Language
+                      </div>
+                      <div className="text-[11px] text-slate-400">
+                        English (Default)
+                      </div>
                     </div>
                   </div>
                   <span className="text-xs font-bold text-slate-400">EN</span>
@@ -962,8 +1138,12 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                   <div className="flex items-center gap-3">
                     <Radio className="w-4 h-4 text-amber-600" />
                     <div>
-                      <div className="text-xs font-bold text-slate-900">GPS Proximity Radar</div>
-                      <div className="text-[11px] text-slate-400">Automatic closest technician</div>
+                      <div className="text-xs font-bold text-slate-900">
+                        GPS Proximity Radar
+                      </div>
+                      <div className="text-[11px] text-slate-400">
+                        Automatic closest technician
+                      </div>
                     </div>
                   </div>
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
@@ -976,8 +1156,12 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                   <div className="flex items-center gap-3">
                     <HelpCircle className="w-4 h-4 text-slate-500" />
                     <div>
-                      <div className="text-xs font-bold text-slate-900">Get Mobile App</div>
-                      <div className="text-[11px] text-slate-400">Install native APK / iOS app</div>
+                      <div className="text-xs font-bold text-slate-900">
+                        Get Mobile App
+                      </div>
+                      <div className="text-[11px] text-slate-400">
+                        Install native APK / iOS app
+                      </div>
                     </div>
                   </div>
                   <ExternalLink className="w-4 h-4 text-slate-400" />
@@ -1129,87 +1313,73 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
       )}
 
       {/* =========================================================================
-          PERSISTENT FULL-WIDTH BOTTOM NAVIGATION BAR ON ALL PAGES
+          PERSISTENT FLOATING PILL BOTTOM NAVIGATION BAR (MATCHING SCREENSHOT)
           ========================================================================= */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 border-t border-slate-200/90 backdrop-blur-lg px-4 py-2 shadow-2xl">
-        <div className="flex items-center justify-between max-w-md mx-auto">
+      {/* Persistent Floating Pill Bottom Navigation Bar (Light Mode) */}
+      <div className="fixed bottom-4 left-0 right-0 z-50 flex justify-center pointer-events-none px-4">
+        <div className="pointer-events-auto w-full max-w-[340px] bg-white/95 border border-slate-200/90 rounded-[32px] px-6 py-2 shadow-xl shadow-slate-900/10 backdrop-blur-xl flex items-center justify-between">
           {/* Home Tab */}
           <button
             onClick={handleGoHome}
-            className={`flex-1 flex items-center justify-center py-2.5 px-4 mx-1.5 rounded-2xl transition-all cursor-pointer ${
-              isHomeActive
-                ? "bg-[#e0b328]/15 border border-[#e0b328]/60 shadow-2xs"
-                : "bg-slate-50/80 border border-slate-200/60 hover:bg-slate-100"
-            }`}
+            className="w-12 h-12 flex items-center justify-center cursor-pointer transition-all"
+            title="Home"
           >
             <div
-              className={`w-8 h-8 rounded-xl flex items-center justify-center mr-2.5 transition-colors ${
+              className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
                 isHomeActive
-                  ? "bg-[#e0b328] text-slate-950 shadow-xs"
-                  : "bg-white border border-slate-200 text-slate-500"
+                  ? "bg-[#e0b328] shadow-md shadow-amber-500/30 text-slate-950"
+                  : "bg-transparent text-slate-400 hover:text-slate-700"
               }`}
             >
               <Home
-                className={`w-4 h-4 ${
-                  isHomeActive
-                    ? "stroke-[2.6] text-slate-950"
-                    : "stroke-[2] text-slate-500"
+                className={`w-5 h-5 ${
+                  isHomeActive ? "stroke-[2.6] text-slate-950" : "stroke-[2]"
                 }`}
               />
             </div>
-            <div className="text-left">
-              <span
-                className={`text-xs tracking-tight block ${
-                  isHomeActive
-                    ? "font-black text-slate-900"
-                    : "font-bold text-slate-500"
+          </button>
+
+          {/* Find Tab (Center Elevated Button) */}
+          <button
+            onClick={handleGoFind}
+            className="flex items-center justify-center -mt-6 cursor-pointer group"
+            title="Find Services"
+          >
+            <div
+              className={`w-14 h-14 rounded-full flex items-center justify-center border-4 border-white transition-all ${
+                isFindActive
+                  ? "bg-[#e0b328] shadow-xl shadow-amber-500/40 text-slate-950 scale-105"
+                  : "bg-slate-100 border-white shadow-md text-slate-500 hover:bg-slate-200 hover:text-slate-800"
+              }`}
+            >
+              <Search
+                className={`w-6 h-6 ${
+                  isFindActive ? "stroke-[2.8] text-slate-950" : "stroke-[2.2]"
                 }`}
-              >
-                Home
-              </span>
-              {isHomeActive && (
-                <div className="w-3.5 h-0.5 rounded-full bg-[#e0b328] mt-0.5" />
-              )}
+              />
             </div>
           </button>
 
           {/* Settings Tab */}
           <button
             onClick={handleGoSettings}
-            className={`flex-1 flex items-center justify-center py-2.5 px-4 mx-1.5 rounded-2xl transition-all cursor-pointer ${
-              isSettingsActive
-                ? "bg-[#e0b328]/15 border border-[#e0b328]/60 shadow-2xs"
-                : "bg-slate-50/80 border border-slate-200/60 hover:bg-slate-100"
-            }`}
+            className="w-12 h-12 flex items-center justify-center cursor-pointer transition-all"
+            title="Settings"
           >
             <div
-              className={`w-8 h-8 rounded-xl flex items-center justify-center mr-2.5 transition-colors ${
+              className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
                 isSettingsActive
-                  ? "bg-[#e0b328] text-slate-950 shadow-xs"
-                  : "bg-white border border-slate-200 text-slate-500"
+                  ? "bg-[#e0b328] shadow-md shadow-amber-500/30 text-slate-950"
+                  : "bg-transparent text-slate-400 hover:text-slate-700"
               }`}
             >
               <Settings
-                className={`w-4 h-4 ${
+                className={`w-5 h-5 ${
                   isSettingsActive
                     ? "stroke-[2.6] text-slate-950"
-                    : "stroke-[2] text-slate-500"
+                    : "stroke-[2]"
                 }`}
               />
-            </div>
-            <div className="text-left">
-              <span
-                className={`text-xs tracking-tight block ${
-                  isSettingsActive
-                    ? "font-black text-slate-900"
-                    : "font-bold text-slate-500"
-                }`}
-              >
-                Settings
-              </span>
-              {isSettingsActive && (
-                <div className="w-3.5 h-0.5 rounded-full bg-[#e0b328] mt-0.5" />
-              )}
             </div>
           </button>
         </div>
