@@ -456,7 +456,7 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
               <div className="grid grid-cols-2 gap-2.5">
                 <button
                   onClick={() => handleCall(selectedService.phone)}
-                  className="py-3 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95 cursor-pointer"
+                  className="py-3 px-3 rounded-xl bg-black/10 hover:bg-black/20 text-black font-black text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95 cursor-pointer"
                 >
                   <PhoneCall className="w-4 h-4 stroke-[2.4]" />
                   <span>Call Now</span>
@@ -1316,8 +1316,8 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
           PERSISTENT FLOATING PILL BOTTOM NAVIGATION BAR (MATCHING SCREENSHOT)
           ========================================================================= */}
       {/* Persistent Floating Pill Bottom Navigation Bar (Light Mode) */}
-      <div className="fixed bottom-4 left-0 right-0 z-50 flex justify-center pointer-events-none px-4">
-        <div className="pointer-events-auto w-full max-w-[340px] bg-white/95 border border-slate-200/90 rounded-[32px] px-6 py-2 shadow-xl shadow-slate-900/10 backdrop-blur-xl flex items-center justify-between">
+      <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none">
+        <div className="pointer-events-auto w-full bg-white/95 border-t border-slate-200/90 py-2.5 px-8 sm:px-12 shadow-2xl shadow-slate-900/15 backdrop-blur-xl flex items-center justify-between">
           {/* Home Tab */}
           <button
             onClick={handleGoHome}
