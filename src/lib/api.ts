@@ -1,7 +1,7 @@
 import { Category, Subcategory, Service, UserLocation } from "../types";
 
 const BACKEND_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+  process.env.NEXT_PUBLIC_API_URL || "https://apiwideservice.widetechbd.com/api";
 
 /**
  * Calculates the great-circle distance between two geographic coordinates using the Haversine formula.

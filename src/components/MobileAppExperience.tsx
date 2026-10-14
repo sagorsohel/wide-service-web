@@ -185,21 +185,6 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
     return categories.filter((c) => c.name.toLowerCase().includes(q));
   }, [categories, searchQuery]);
 
-  // Filter services on Home Screen
-  const filteredHomeServices = useMemo(() => {
-    const withDist = sortServicesByDistance(services, userLocation);
-    if (!searchQuery) return withDist;
-    const q = searchQuery.toLowerCase();
-    return withDist.filter(
-      (s) =>
-        s.name.toLowerCase().includes(q) ||
-        (s.businessName && s.businessName.toLowerCase().includes(q)) ||
-        (s.categoryName && s.categoryName.toLowerCase().includes(q)) ||
-        (s.subcategoryName && s.subcategoryName.toLowerCase().includes(q)) ||
-        s.address.toLowerCase().includes(q)
-    );
-  }, [services, searchQuery, userLocation]);
-
   // Filter services for CategoryDetailScreen by Category & Radius
   const categoryServices = useMemo(() => {
     if (!selectedCategory) return [];
@@ -1138,58 +1123,6 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                       </span>
                     </button>
                   ))}
-            </div>
-          </div>
-
-          {/* 5. Nearby Services (Closest First) Section */}
-          <div className="px-4 flex-1">
-            <div className="flex items-center justify-between mb-3 px-0.5">
-              <div className="flex items-center gap-1.5">
-                <Navigation className="w-3.5 h-3.5 text-amber-600" />
-                <span className="text-xs font-black text-slate-900 truncate">
-                  Nearby in {userLocation.area}
-                </span>
-              </div>
-
-              <div className="px-2 py-0.5 rounded-full bg-amber-100 border border-amber-300">
-                <span className="text-[10px] font-black text-amber-900">
-                  ⚡ Closest First
-                </span>
-              </div>
-            </div>
-
-            {/* Services List */}
-            <div className="space-y-3">
-              {loading && services.length === 0 ? (
-                [1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="bg-white rounded-2xl p-3.5 border border-slate-200 animate-pulse flex items-center gap-3"
-                  >
-                    <div className="w-14 h-14 rounded-2xl bg-slate-200 shrink-0" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-3.5 bg-slate-200 rounded w-3/4" />
-                      <div className="h-3 bg-slate-200 rounded w-1/2" />
-                    </div>
-                  </div>
-                ))
-              ) : filteredHomeServices.length > 0 ? (
-                filteredHomeServices.map((srv) => (
-                  <ServiceCard
-                    key={srv.id}
-                    service={srv}
-                    userLocation={userLocation}
-                    onSelect={(s) => setSelectedService(s)}
-                  />
-                ))
-              ) : (
-                <div className="p-8 text-center bg-white rounded-2xl border border-slate-200">
-                  <span className="text-2xl block mb-2">🔍</span>
-                  <p className="text-xs font-bold text-slate-600">
-                    No nearby services match your search.
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         </div>
