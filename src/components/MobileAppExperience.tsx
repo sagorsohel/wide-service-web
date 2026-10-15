@@ -12,7 +12,8 @@ import {
 } from "../lib/api";
 import { ServiceCard } from "./ServiceCard";
 import { ServiceMapEmbed } from "./ServiceMapEmbed";
-import { loginUser, registerUser } from "../lib/api";
+import { loginUser, registerUser, googleLoginUser } from "../lib/api";
+import { loginWithGoogle, subscribeToAuth } from "../lib/firebase";
 
 export interface UserProfile {
   id?: number | string;
@@ -136,14 +137,42 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
   const [authError, setAuthError] = useState<string | null>(null);
   const [authSuccess, setAuthSuccess] = useState<string | null>(null);
 
-  // Restore authenticated session from localStorage
+  // Restore authenticated session from localStorage & Firebase Auth sync
   useEffect(() => {
     try {
       const saved = localStorage.getItem("wide_service_auth_user");
       if (saved) {
-        setCurrentUser(JSON.parse(saved));
+        const parsed: UserProfile = JSON.parse(saved);
+        if (!parsed.photoURL && (parsed.displayName || parsed.name || parsed.email)) {
+          parsed.photoURL = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
+            parsed.displayName || parsed.name || parsed.email || "User"
+          )}`;
+        }
+        setCurrentUser(parsed);
       }
     } catch {}
+
+    const unsubscribe = subscribeToAuth((fbProfile) => {
+      if (fbProfile?.photoURL) {
+        setCurrentUser((prev) => {
+          if (!prev) return prev;
+          if (prev.photoURL === fbProfile.photoURL) return prev;
+          const updated: UserProfile = {
+            ...prev,
+            photoURL: fbProfile.photoURL,
+            displayName: fbProfile.displayName || prev.displayName,
+          };
+          try {
+            localStorage.setItem("wide_service_auth_user", JSON.stringify(updated));
+          } catch {}
+          return updated;
+        });
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   // Filter & Data States
@@ -411,6 +440,57 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
     } catch {}
     setAuthSuccess(null);
     setAuthError(null);
+  };
+
+  const handleGoogleSignIn = async () => {
+    setAuthLoading(true);
+    setAuthError(null);
+    setAuthSuccess(null);
+    try {
+      const fbUser = await loginWithGoogle();
+      if (!fbUser) {
+        setAuthLoading(false);
+        return;
+      }
+
+      // Sync with backend API
+      const backendRes = await googleLoginUser({
+        email: fbUser.email || undefined,
+        name: fbUser.displayName || undefined,
+        photoURL: fbUser.photoURL || undefined,
+      });
+
+      const avatarUrl =
+        fbUser.photoURL ||
+        backendRes.data?.photoURL ||
+        `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
+          fbUser.displayName || fbUser.email || "User"
+        )}`;
+
+      const userObj: UserProfile = {
+        id: backendRes.data?.id || fbUser.uid,
+        name: backendRes.data?.name || fbUser.displayName || "Google User",
+        displayName: fbUser.displayName || backendRes.data?.name || "Google User",
+        phone: backendRes.data?.phone || fbUser.phoneNumber || undefined,
+        phoneNumber: backendRes.data?.phone || fbUser.phoneNumber || undefined,
+        email: fbUser.email,
+        role: backendRes.data?.role || "Verified Customer",
+        token: backendRes.data?.token,
+        firebaseToken: backendRes.data?.firebaseToken,
+        photoURL: avatarUrl,
+        createdAt: fbUser.createdAt || new Date().toLocaleDateString(),
+      };
+
+      setCurrentUser(userObj);
+      try {
+        localStorage.setItem("wide_service_auth_user", JSON.stringify(userObj));
+      } catch {}
+      setAuthSuccess("Signed in with Google successfully!");
+    } catch (err: any) {
+      setAuthError(err?.message || "Google Sign-In failed.");
+    } finally {
+      setAuthLoading(false);
+    }
   };
 
   // Filter categories by search on Home Screen
@@ -989,10 +1069,27 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                 /* Authenticated User: Active Review Submission Form */
                 <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 shadow-2xs">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-7 h-7 rounded-full bg-amber-500 text-slate-950 font-black text-xs flex items-center justify-center shrink-0">
-                      {(currentUser.displayName || currentUser.name || "U")
-                        .charAt(0)
-                        .toUpperCase()}
+                    <div className="w-7 h-7 rounded-full bg-amber-500 text-slate-950 font-black text-xs flex items-center justify-center shrink-0 overflow-hidden border border-amber-600/30">
+                      {currentUser.photoURL ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={currentUser.photoURL}
+                          alt="Reviewer"
+                          referrerPolicy="no-referrer"
+                          crossOrigin="anonymous"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
+                              currentUser.displayName || currentUser.name || "User"
+                            )}`;
+                          }}
+                        />
+                      ) : (
+                        (currentUser.displayName || currentUser.name || "U")
+                          .charAt(0)
+                          .toUpperCase()
+                      )}
                     </div>
                     <div>
                       <div className="text-xs font-bold text-slate-900">
@@ -1111,8 +1208,25 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                   >
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-black text-xs flex items-center justify-center shrink-0">
-                          {rev.userName.charAt(0).toUpperCase()}
+                        <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-black text-xs flex items-center justify-center shrink-0 overflow-hidden">
+                          {rev.userAvatar ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={rev.userAvatar}
+                              alt={rev.userName}
+                              referrerPolicy="no-referrer"
+                              crossOrigin="anonymous"
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
+                                  rev.userName
+                                )}`;
+                              }}
+                            />
+                          ) : (
+                            rev.userName.charAt(0).toUpperCase()
+                          )}
                         </div>
                         <div>
                           <div className="text-xs font-bold text-slate-900 flex items-center gap-1">
@@ -2180,7 +2294,15 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                             currentUser.name ||
                             "User"
                           }
+                          referrerPolicy="no-referrer"
+                          crossOrigin="anonymous"
                           className="w-full h-full object-cover rounded-xl"
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
+                              currentUser.displayName || currentUser.name || "User"
+                            )}`;
+                          }}
                         />
                       ) : (
                         <div className="w-full h-full bg-slate-900 text-amber-400 font-black text-xl flex items-center justify-center rounded-xl">
@@ -2216,16 +2338,6 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                           {currentUser.phoneNumber || currentUser.phone}
                         </p>
                       )}
-                      <div className="mt-2 flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-black border border-emerald-200">
-                          <span>●</span> Verified Customer
-                        </span>
-                        {currentUser.createdAt && (
-                          <span className="text-[10px] text-slate-400 font-medium">
-                            Joined {currentUser.createdAt}
-                          </span>
-                        )}
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -2503,6 +2615,44 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                         </>
                       )}
                     </button>
+
+                    {/* Divider */}
+                    <div className="relative my-3 text-center">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-slate-200"></div>
+                      </div>
+                      <div className="relative flex justify-center text-[10px] uppercase tracking-wider">
+                        <span className="bg-white px-2.5 text-slate-400 font-bold">Or continue with</span>
+                      </div>
+                    </div>
+
+                    {/* Google Sign In Button */}
+                    <button
+                      type="button"
+                      onClick={handleGoogleSignIn}
+                      disabled={authLoading}
+                      className="w-full py-2.5 px-4 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-2xs active:scale-98 transition-all flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50"
+                    >
+                      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                        <path
+                          fill="#4285F4"
+                          d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
+                        />
+                        <path
+                          fill="#34A853"
+                          d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
+                        />
+                        <path
+                          fill="#FBBC05"
+                          d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+                        />
+                        <path
+                          fill="#EA4335"
+                          d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                        />
+                      </svg>
+                      <span>Continue with Google</span>
+                    </button>
                   </form>
 
                   {/* Switcher Footer */}
@@ -2616,7 +2766,15 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                       <img
                         src={currentUser.photoURL}
                         alt="Profile"
+                        referrerPolicy="no-referrer"
+                        crossOrigin="anonymous"
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
+                            currentUser.displayName || currentUser.name || "User"
+                          )}`;
+                        }}
                       />
                     ) : (
                       <span>
@@ -2985,17 +3143,36 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
             title="Profile"
           >
             <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all overflow-hidden ${
                 isProfileActive
                   ? "bg-[#e0b328] shadow-md shadow-amber-500/30 text-slate-950"
                   : "bg-transparent text-slate-400 hover:text-slate-700"
               }`}
             >
-              <User
-                className={`w-5 h-5 ${
-                  isProfileActive ? "stroke-[2.6] text-slate-950" : "stroke-[2]"
-                }`}
-              />
+              {currentUser?.photoURL ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={currentUser.photoURL}
+                  alt="Profile"
+                  referrerPolicy="no-referrer"
+                  crossOrigin="anonymous"
+                  className={`w-6 h-6 rounded-full object-cover border ${
+                    isProfileActive ? "border-slate-950 ring-1 ring-slate-950" : "border-slate-300"
+                  }`}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
+                      currentUser.displayName || currentUser.name || "User"
+                    )}`;
+                  }}
+                />
+              ) : (
+                <User
+                  className={`w-5 h-5 ${
+                    isProfileActive ? "stroke-[2.6] text-slate-950" : "stroke-[2]"
+                  }`}
+                />
+              )}
             </div>
             <span
               className={`text-[9px] font-bold mt-0.5 tracking-tight ${

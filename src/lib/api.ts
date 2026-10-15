@@ -366,11 +366,13 @@ export async function getServiceById(id: number): Promise<Service | null> {
 export interface AuthUser {
   id: number;
   name: string;
+  displayName?: string | null;
   phone: string;
   email?: string | null;
   role: string;
   token: string;
   firebaseToken?: string | null;
+  photoURL?: string | null;
 }
 
 /**
@@ -419,6 +421,31 @@ export async function registerUser(
     const json = await res.json();
     if (!res.ok || !json.success) {
       return { success: false, message: json.message || "Failed to register" };
+    }
+    return { success: true, data: json.data };
+  } catch (err: any) {
+    return { success: false, message: err?.message || "Network error. Please try again." };
+  }
+}
+
+/**
+ * Google Sign In / Sync with backend API
+ */
+export async function googleLoginUser(payload: {
+  idToken?: string;
+  email?: string;
+  name?: string;
+  photoURL?: string;
+}): Promise<{ success: boolean; message?: string; data?: AuthUser }> {
+  try {
+    const res = await fetch(`${BACKEND_BASE_URL}/auth/google`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json();
+    if (!res.ok || !json.success) {
+      return { success: false, message: json.message || "Failed to authenticate with Google" };
     }
     return { success: true, data: json.data };
   } catch (err: any) {

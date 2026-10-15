@@ -6,9 +6,12 @@ import {
   signOut,
   updateProfile,
   onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup,
   User,
   Auth,
 } from "firebase/auth";
+import { getAnalytics, isSupported, Analytics } from "firebase/analytics";
 
 export interface WideUserProfile {
   uid: string;
@@ -20,18 +23,21 @@ export interface WideUserProfile {
   role?: string;
 }
 
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyDummyKeyForWideServiceApp2026",
+export const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyDR_nWUERFoKMzWCP2ggOqFz4c2kKemj9o",
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "wide-service.firebaseapp.com",
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "wide-service",
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "wide-service.appspot.com",
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "112041826907",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:112041826907:web:89a1bc2d3e4f",
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "wide-service.firebasestorage.app",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "1016270113509",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:1016270113509:web:ef1d3dd22727a8ce1ba20c",
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-BTJ76FF5RF",
 };
 
 // Initialize Firebase safely (avoiding multiple initializations in Next.js SSR / HMR)
 let app: FirebaseApp;
 let auth: Auth | null = null;
+let analytics: Analytics | null = null;
+
 const isConfigured = Boolean(
   process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
   process.env.NEXT_PUBLIC_FIREBASE_API_KEY !== "AIzaSyDummyKeyForWideServiceApp2026"
@@ -40,6 +46,15 @@ const isConfigured = Boolean(
 try {
   app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
   auth = getAuth(app);
+
+  // Initialize Analytics safely on client side
+  if (typeof window !== "undefined") {
+    isSupported().then((supported) => {
+      if (supported) {
+        analytics = getAnalytics(app);
+      }
+    }).catch(() => {});
+  }
 } catch (err) {
   console.warn("Firebase initialization warning:", err);
 }
@@ -149,6 +164,43 @@ export async function registerWithEmail(
 }
 
 /**
+ * Sign In / Sign Up with Google via Firebase Auth
+ */
+export async function loginWithGoogle(): Promise<WideUserProfile> {
+  if (auth && isConfigured) {
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: "select_account" });
+    const cred = await signInWithPopup(auth, provider);
+    const fallbackAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
+      cred.user.displayName || cred.user.email || "GoogleUser"
+    )}`;
+    const profile: WideUserProfile = {
+      uid: cred.user.uid,
+      email: cred.user.email,
+      displayName: cred.user.displayName || "Google User",
+      phoneNumber: cred.user.phoneNumber,
+      photoURL: cred.user.photoURL || fallbackAvatar,
+      createdAt: cred.user.metadata.creationTime,
+    };
+    saveLocalUser(profile);
+    return profile;
+  }
+
+  // Fallback for local mock
+  const mockUser: WideUserProfile = {
+    uid: "google_user_" + Math.random().toString(36).substring(2, 9),
+    email: "user@gmail.com",
+    displayName: "Google User",
+    phoneNumber: "+880 1700-999888",
+    photoURL: "https://api.dicebear.com/7.x/avataaars/svg?seed=google",
+    createdAt: new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" }),
+    role: "Verified Customer",
+  };
+  saveLocalUser(mockUser);
+  return mockUser;
+}
+
+/**
  * Sign Out from Firebase and clear storage
  */
 export async function logoutUser(): Promise<void> {
@@ -193,4 +245,4 @@ export function subscribeToAuth(callback: (user: WideUserProfile | null) => void
   });
 }
 
-export { auth };
+export { app, auth, analytics };
