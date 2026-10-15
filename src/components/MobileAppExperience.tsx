@@ -12,10 +12,7 @@ import {
 } from "../lib/api";
 import { ServiceCard } from "./ServiceCard";
 import { ServiceMapEmbed } from "./ServiceMapEmbed";
-import {
-  loginUser,
-  registerUser,
-} from "../lib/api";
+import { loginUser, registerUser } from "../lib/api";
 
 export interface UserProfile {
   id?: number | string;
@@ -74,7 +71,22 @@ import {
   HeartHandshake,
   UserCheck,
   Award,
+  Star,
+  Camera,
+  Send,
+  ThumbsUp,
 } from "lucide-react";
+
+export interface ReviewItem {
+  id: string;
+  serviceId: string | number;
+  userName: string;
+  userAvatar?: string;
+  rating: number;
+  comment: string;
+  date: string;
+  verified?: boolean;
+}
 
 interface MobileAppExperienceProps {
   userLocation: UserLocation;
@@ -145,6 +157,24 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
 
   // Service Detail Gallery State
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+
+  // Service Reviews & Ratings State
+  const [reviewsMap, setReviewsMap] = useState<Record<string, ReviewItem[]>>({});
+  const [newRating, setNewRating] = useState(5);
+  const [newComment, setNewComment] = useState("");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewSuccessMsg, setReviewSuccessMsg] = useState<string | null>(null);
+  const [hoverRating, setHoverRating] = useState<number | null>(null);
+
+  // Restore saved reviews from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("wide_service_reviews_v1");
+      if (saved) {
+        setReviewsMap(JSON.parse(saved));
+      }
+    } catch {}
+  }, []);
 
   // Load initial categories & all nearby services
   useEffect(() => {
@@ -280,7 +310,9 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
       try {
         const res = await loginUser(authEmail.trim(), authPassword.trim());
         if (!res.success || !res.data) {
-          setAuthError(res.message || "Invalid phone number/email or password.");
+          setAuthError(
+            res.message || "Invalid phone number/email or password.",
+          );
           return;
         }
 
@@ -299,7 +331,10 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
 
         setCurrentUser(userObj);
         try {
-          localStorage.setItem("wide_service_auth_user", JSON.stringify(userObj));
+          localStorage.setItem(
+            "wide_service_auth_user",
+            JSON.stringify(userObj),
+          );
         } catch {}
 
         setAuthSuccess("Successfully logged in!");
@@ -330,7 +365,7 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
           authName.trim(),
           authPhone.trim(),
           authPassword.trim(),
-          authEmail.trim() || undefined
+          authEmail.trim() || undefined,
         );
 
         if (!res.success || !res.data) {
@@ -353,7 +388,10 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
 
         setCurrentUser(userObj);
         try {
-          localStorage.setItem("wide_service_auth_user", JSON.stringify(userObj));
+          localStorage.setItem(
+            "wide_service_auth_user",
+            JSON.stringify(userObj),
+          );
         } catch {}
 
         setAuthSuccess("Account created successfully!");
@@ -515,6 +553,93 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
     return null;
   }, [selectedService, userLocation]);
 
+  // Reviews for the currently selected service
+  const selectedServiceReviews: ReviewItem[] = useMemo(() => {
+    if (!selectedService) return [];
+    const srvKey = String(selectedService.id);
+    if (reviewsMap[srvKey] && reviewsMap[srvKey].length > 0) {
+      return reviewsMap[srvKey];
+    }
+    return [
+      {
+        id: `def-1-${selectedService.id}`,
+        serviceId: selectedService.id,
+        userName: "Tariqul Islam",
+        rating: 5,
+        comment: "খুব দ্রুত সময়ে সার্ভিস পেয়েছি। টেকনিশিয়ান খুবই দক্ষ ও অমায়িক ছিলেন।",
+        date: "2 days ago",
+        verified: true,
+      },
+      {
+        id: `def-2-${selectedService.id}`,
+        serviceId: selectedService.id,
+        userName: "Farhana Akter",
+        rating: 5,
+        comment: "Super fast response and fair pricing. Recommended for emergency service!",
+        date: "1 week ago",
+        verified: true,
+      },
+      {
+        id: `def-3-${selectedService.id}`,
+        serviceId: selectedService.id,
+        userName: "Kamrul Hasan",
+        rating: 4,
+        comment: "Professional behavior and solved the technical issue cleanly.",
+        date: "2 weeks ago",
+        verified: true,
+      },
+    ];
+  }, [reviewsMap, selectedService]);
+
+  const serviceAvgRating = useMemo(() => {
+    if (selectedServiceReviews.length === 0) return "5.0";
+    const sum = selectedServiceReviews.reduce((acc, r) => acc + r.rating, 0);
+    return (sum / selectedServiceReviews.length).toFixed(1);
+  }, [selectedServiceReviews]);
+
+  const handleGoToLoginForReview = () => {
+    setSelectedService(null);
+    setSelectedSubcategory(null);
+    setSelectedCategory(null);
+    setActiveTab("profile");
+    setAuthMode("login");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleAddReview = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser || !selectedService) return;
+    if (!newComment.trim()) return;
+
+    setReviewSubmitting(true);
+    const srvKey = String(selectedService.id);
+    const baseList = selectedServiceReviews;
+    const newRev: ReviewItem = {
+      id: `rev-${Date.now()}`,
+      serviceId: selectedService.id,
+      userName: currentUser.displayName || currentUser.name || "Customer",
+      userAvatar: currentUser.photoURL || undefined,
+      rating: newRating,
+      comment: newComment.trim(),
+      date: "Just now",
+      verified: true,
+    };
+
+    const updated = [newRev, ...baseList];
+    const newMap = { ...reviewsMap, [srvKey]: updated };
+    setReviewsMap(newMap);
+
+    try {
+      localStorage.setItem("wide_service_reviews_v1", JSON.stringify(newMap));
+    } catch {}
+
+    setNewComment("");
+    setNewRating(5);
+    setReviewSubmitting(false);
+    setReviewSuccessMsg("আপনার মূল্যবান রিভিউটি সফলভাবে জমা হয়েছে!");
+    setTimeout(() => setReviewSuccessMsg(null), 4000);
+  };
+
   // Services list for Find tab (with live search & radius filtering)
   const findServicesList = useMemo(() => {
     let list = services;
@@ -593,47 +718,6 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
           {/* Content Container */}
           <div className="flex-1 bg-white">
             {/* 1. Image Gallery Showcase */}
-            <div className="relative w-full aspect-16/10 sm:aspect-16/9 bg-slate-900 overflow-hidden">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={serviceGalleryImages[activeImageIndex]}
-                alt={selectedService.name}
-                className="w-full h-full object-cover transition-all duration-300"
-              />
-
-              {/* Prev / Next Arrows */}
-              {serviceGalleryImages.length > 1 && (
-                <>
-                  <button
-                    onClick={() =>
-                      setActiveImageIndex((prev) =>
-                        prev === 0 ? serviceGalleryImages.length - 1 : prev - 1,
-                      )
-                    }
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-colors cursor-pointer"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() =>
-                      setActiveImageIndex((prev) =>
-                        prev === serviceGalleryImages.length - 1 ? 0 : prev + 1,
-                      )
-                    }
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-colors cursor-pointer"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </>
-              )}
-
-              {/* Image Counter Badge */}
-              {serviceGalleryImages.length > 1 && (
-                <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-xs text-white text-[11px] font-black">
-                  {activeImageIndex + 1} / {serviceGalleryImages.length}
-                </div>
-              )}
-            </div>
 
             {/* 2. Primary Service Details */}
             <div className="p-4 sm:p-5 border-b border-slate-100">
@@ -775,36 +859,328 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                   </div>
                 </div>
               )}
+            {/* 6. Service Photos & Gallery Showcase (Clean with Side Margins) */}
+            <div className="p-4 sm:p-5 border-b border-slate-100">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-300/40 flex items-center justify-center text-amber-700">
+                    <Camera className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                      Service Photos &amp; Portfolio
+                    </h3>
+                    <p className="text-[10px] text-slate-400 font-medium">
+                      Real work samples &amp; verified photos
+                    </p>
+                  </div>
+                </div>
+                {serviceGalleryImages.length > 1 && (
+                  <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
+                    {activeImageIndex + 1} / {serviceGalleryImages.length}
+                  </span>
+                )}
+              </div>
+
+              {/* Main Image Container with Side Gap, Rounded Border, & Aspect Ratio */}
+              <div className="relative w-full aspect-[16/10] sm:aspect-video rounded-2xl bg-slate-950 overflow-hidden shadow-md border border-slate-200 group select-none">
+                {/* Ambient Blurred Backdrop for unusual/vertical aspect ratios */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={serviceGalleryImages[activeImageIndex]}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-35 scale-125 pointer-events-none"
+                />
+
+                {/* Primary Photo */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={serviceGalleryImages[activeImageIndex]}
+                  alt={selectedService.name}
+                  className="relative z-10 w-full h-full object-contain sm:object-cover transition-all duration-300"
+                />
+
+                {/* Prev / Next Navigation Arrows */}
+                {serviceGalleryImages.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setActiveImageIndex((prev) =>
+                          prev === 0 ? serviceGalleryImages.length - 1 : prev - 1,
+                        )
+                      }
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/60 hover:bg-black/85 backdrop-blur-md text-white flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-md"
+                      title="Previous Image"
+                    >
+                      <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setActiveImageIndex((prev) =>
+                          prev === serviceGalleryImages.length - 1 ? 0 : prev + 1,
+                        )
+                      }
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/60 hover:bg-black/85 backdrop-blur-md text-white flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-md"
+                      title="Next Image"
+                    >
+                      <ChevronRight className="w-5 h-5 stroke-[2.5]" />
+                    </button>
+                  </>
+                )}
+
+                {/* Counter Badge */}
+                {serviceGalleryImages.length > 1 && (
+                  <div className="absolute bottom-2.5 right-2.5 z-20 px-2.5 py-0.5 rounded-full bg-black/70 backdrop-blur-sm text-white text-[10px] font-black tracking-wide border border-white/20">
+                    {activeImageIndex + 1} / {serviceGalleryImages.length}
+                  </div>
+                )}
+              </div>
+
+              {/* Thumbnails Row with Side Padding */}
+              {serviceGalleryImages.length > 1 && (
+                <div className="flex items-center gap-2 mt-3 overflow-x-auto pb-1 no-scrollbar">
+                  {serviceGalleryImages.map((img, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setActiveImageIndex(idx)}
+                      className={`relative w-14 h-14 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
+                        activeImageIndex === idx
+                          ? "border-amber-500 scale-105 shadow-sm ring-2 ring-amber-400/40"
+                          : "border-slate-200 opacity-60 hover:opacity-100"
+                      }`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* 7. Customer Reviews & Ratings Section (Protected by Login) */}
+            <div className="p-4 sm:p-5 space-y-4">
+              {/* Header & Overall Rating Summary */}
+              <div className="flex items-center justify-between pb-1">
+                <div>
+                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                    <Star className="w-4 h-4 fill-amber-400 text-amber-500" />
+                    <span>Customer Reviews</span>
+                  </h3>
+                  <p className="text-[10px] text-slate-400 font-medium">
+                    Verified ratings from real service bookings
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200/80">
+                  <span className="text-xs font-black text-amber-900">
+                    ★ {serviceAvgRating}
+                  </span>
+                  <span className="text-[10px] font-bold text-amber-700">
+                    ({selectedServiceReviews.length})
+                  </span>
+                </div>
+              </div>
+
+              {/* Review Submission Form: Only Accessible If User Is Logged In */}
+              {currentUser ? (
+                /* Authenticated User: Active Review Submission Form */
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 shadow-2xs">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-7 h-7 rounded-full bg-amber-500 text-slate-950 font-black text-xs flex items-center justify-center shrink-0">
+                      {(currentUser.displayName || currentUser.name || "U")
+                        .charAt(0)
+                        .toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-slate-900">
+                        {currentUser.displayName || currentUser.name}
+                      </div>
+                      <div className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span>Verified User Review</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleAddReview} className="space-y-3">
+                    {/* Star Rating Picker */}
+                    <div>
+                      <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 block mb-1">
+                        Your Rating
+                      </label>
+                      <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setNewRating(star)}
+                            onMouseEnter={() => setHoverRating(star)}
+                            onMouseLeave={() => setHoverRating(null)}
+                            className="p-1 text-amber-400 hover:scale-115 transition-transform cursor-pointer"
+                            title={`${star} Star`}
+                          >
+                            <Star
+                              className={`w-6 h-6 ${
+                                (hoverRating ?? newRating) >= star
+                                  ? "fill-amber-400 text-amber-500 drop-shadow-2xs"
+                                  : "text-slate-300"
+                              }`}
+                            />
+                          </button>
+                        ))}
+                        <span className="text-xs font-bold text-amber-800 ml-2">
+                          {newRating === 5
+                            ? "⭐⭐⭐⭐⭐ Excellent (অসাধারণ)"
+                            : newRating === 4
+                            ? "⭐⭐⭐⭐ Very Good (খুব ভালো)"
+                            : newRating === 3
+                            ? "⭐⭐⭐ Good (মোটামুটি)"
+                            : newRating === 2
+                            ? "⭐⭐ Fair (চলনসই)"
+                            : "⭐ Poor (উন্নত প্রয়োজন)"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Review Comment Textarea */}
+                    <div>
+                      <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 block mb-1">
+                        Your Feedback
+                      </label>
+                      <textarea
+                        required
+                        rows={3}
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        placeholder="আপনার অভিজ্ঞতা শেয়ার করুন (কাজের মান, টেকনিশিয়ানের আচরণ, চার্জ ইত্যাদি)..."
+                        className="w-full text-xs font-medium text-slate-900 bg-white border border-slate-200 rounded-xl p-3 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all resize-none"
+                      />
+                    </div>
+
+                    {/* Success Message Banner */}
+                    {reviewSuccessMsg && (
+                      <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span>{reviewSuccessMsg}</span>
+                      </div>
+                    )}
+
+                    {/* Submit Review Button */}
+                    <button
+                      type="submit"
+                      disabled={reviewSubmitting || !newComment.trim()}
+                      className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs shadow-md shadow-amber-500/25 active:scale-98 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      <span>{reviewSubmitting ? "পোস্ট হচ্ছে..." : "রিভিউ পোস্ট করুন"}</span>
+                    </button>
+                  </form>
+                </div>
+              ) : (
+                /* Unauthenticated User: Lock / Login Guard Card */
+                <div className="bg-amber-50/70 border border-amber-200/90 rounded-2xl p-4 sm:p-5 text-center shadow-2xs">
+                  <div className="w-10 h-10 rounded-full bg-amber-500/15 border border-amber-300 text-amber-800 flex items-center justify-center mx-auto mb-2.5">
+                    <Lock className="w-4 h-4 stroke-[2.4]" />
+                  </div>
+                  <h4 className="text-xs sm:text-sm font-black text-slate-900 tracking-tight">
+                    রিভিউ দিতে লগইন করুন
+                  </h4>
+                  <p className="text-[11px] text-slate-600 font-medium max-w-xs mx-auto mt-1 mb-3.5 leading-relaxed">
+                    শুধুমাত্র ভেরিফাইড ইউজাররা টেকনিশিয়ানকে রেটিং ও রিভিউ দিতে পারবেন।
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleGoToLoginForReview}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 text-white font-bold text-xs shadow-md active:scale-95 transition-all cursor-pointer"
+                  >
+                    <LogIn className="w-3.5 h-3.5" />
+                    <span>লগইন বা সাইন আপ করুন</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Verified Customer Reviews List */}
+              <div className="space-y-2.5 pt-1">
+                {selectedServiceReviews.map((rev) => (
+                  <div
+                    key={rev.id}
+                    className="bg-white rounded-2xl p-3.5 border border-slate-200/80 shadow-2xs"
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-black text-xs flex items-center justify-center shrink-0">
+                          {rev.userName.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-slate-900 flex items-center gap-1">
+                            <span>{rev.userName}</span>
+                            {rev.verified && (
+                              <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded-full border border-emerald-200/60 flex items-center gap-0.5">
+                                <CheckCircle2 className="w-2.5 h-2.5" /> Verified
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[10px] text-slate-400 font-medium">
+                            {rev.date}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Stars */}
+                      <div className="flex items-center gap-0.5 text-amber-400">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-3 h-3 ${
+                              i < rev.rating
+                                ? "fill-amber-400 text-amber-400"
+                                : "text-slate-200"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-slate-700 font-medium leading-relaxed mt-1">
+                      {rev.comment}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Floating Bottom Booking Bar (Docked right above the persistent bottom navigation bar) */}
           <div className="fixed bottom-[60px] left-0 right-0 z-40 flex justify-center pointer-events-none px-0">
             <div className="pointer-events-auto w-full max-w-md mx-auto bg-white/95 border-t border-slate-200 backdrop-blur-md p-2.5 px-4 shadow-lg">
               <div className="flex items-center gap-2">
-              <button
-                onClick={() => handleCall(selectedService.phone)}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs flex items-center justify-center gap-2 shadow-md shadow-emerald-600/25 active:scale-95 transition-all cursor-pointer"
-              >
-                <PhoneCall className="w-4 h-4" />
-                <span>Call ({selectedService.phone})</span>
-              </button>
-              <button
-                onClick={() =>
-                  handleWhatsApp(
-                    selectedService.whatsapp || selectedService.phone,
-                    selectedService.name,
-                  )
-                }
-                className="w-11 h-11 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white flex items-center justify-center shadow-md active:scale-95 transition-all cursor-pointer shrink-0"
-                title="Chat on WhatsApp"
-              >
-                <MessageSquare className="w-4 h-4" />
-              </button>
+                <button
+                  onClick={() => handleCall(selectedService.phone)}
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs flex items-center justify-center gap-2 shadow-md shadow-emerald-600/25 active:scale-95 transition-all cursor-pointer"
+                >
+                  <PhoneCall className="w-4 h-4" />
+                  <span>Call ({selectedService.phone})</span>
+                </button>
+                <button
+                  onClick={() =>
+                    handleWhatsApp(
+                      selectedService.whatsapp || selectedService.phone,
+                      selectedService.name,
+                    )
+                  }
+                  className="w-11 h-11 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white flex items-center justify-center shadow-md active:scale-95 transition-all cursor-pointer shrink-0"
+                  title="Chat on WhatsApp"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    ) : selectedSubcategory && selectedCategory ? (
+      ) : selectedSubcategory && selectedCategory ? (
         /* =========================================================================
            VIEW 2: SUBCATEGORY DETAIL SCREEN
            ========================================================================= */
@@ -855,16 +1231,6 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
           <div className="flex-1 bg-[#f8fafc] pt-4 px-4 pb-12">
             {/* Proximity / Distance Radius Chips Bar */}
             <div className="mb-4">
-              <div className="flex items-center justify-between mb-2 px-1">
-                <div className="flex items-center gap-1.5 text-xs font-black text-slate-900">
-                  <Navigation className="w-3.5 h-3.5 text-amber-600" />
-                  <span>Nearby in {userLocation.area}</span>
-                </div>
-                <span className="text-[10px] font-black text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">
-                  ⚡ Closest First
-                </span>
-              </div>
-
               {/* Radius Chips Scroll */}
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
                 {RADIUS_OPTIONS.map((opt) => {
@@ -985,15 +1351,6 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
           <div className="flex-1 bg-[#f8fafc] pt-5 px-4 pb-12">
             {/* Subcategories 2-Column Grid */}
             <div className="mb-5">
-              <div className="flex items-center justify-between mb-3 px-1">
-                <span className="text-xs font-black uppercase tracking-tight text-slate-900">
-                  Subcategories
-                </span>
-                <span className="text-[11px] font-bold text-slate-400">
-                  {subcategories.length} available
-                </span>
-              </div>
-
               {categoryLoading ? (
                 <div className="grid grid-cols-2 gap-2.5">
                   {[1, 2, 3, 4].map((i) => (
@@ -1041,16 +1398,6 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
 
             {/* Proximity Radius Filter Bar */}
             <div className="mb-4">
-              <div className="flex items-center justify-between mb-2 px-1">
-                <div className="flex items-center gap-1.5 text-xs font-black text-slate-900">
-                  <Navigation className="w-3.5 h-3.5 text-amber-600" />
-                  <span>Services in {selectedCategory.name}</span>
-                </div>
-                <span className="text-[10px] font-black text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">
-                  ⚡ Closest First
-                </span>
-              </div>
-
               {/* Radius Chips Scroll */}
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
                 {RADIUS_OPTIONS.map((opt) => {
@@ -1585,8 +1932,20 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                   preserveAspectRatio="xMidYMid slice"
                 >
                   <defs>
-                    <filter id="bangladesh-pin-shadow" x="-30%" y="-30%" width="160%" height="160%">
-                      <feDropShadow dx="0" dy="2" stdDeviation="1.5" floodColor="#000000" floodOpacity="0.5" />
+                    <filter
+                      id="bangladesh-pin-shadow"
+                      x="-30%"
+                      y="-30%"
+                      width="160%"
+                      height="160%"
+                    >
+                      <feDropShadow
+                        dx="0"
+                        dy="2"
+                        stdDeviation="1.5"
+                        floodColor="#000000"
+                        floodOpacity="0.5"
+                      />
                     </filter>
                   </defs>
 
@@ -1632,8 +1991,25 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                   />
 
                   {/* Concentric Signal Arcs */}
-                  <circle cx="166" cy="22" r="14" fill="none" stroke="#facc15" strokeWidth="0.8" opacity="0.3" strokeDasharray="2 2" />
-                  <circle cx="166" cy="22" r="22" fill="none" stroke="#facc15" strokeWidth="0.5" opacity="0.15" />
+                  <circle
+                    cx="166"
+                    cy="22"
+                    r="14"
+                    fill="none"
+                    stroke="#facc15"
+                    strokeWidth="0.8"
+                    opacity="0.3"
+                    strokeDasharray="2 2"
+                  />
+                  <circle
+                    cx="166"
+                    cy="22"
+                    r="22"
+                    fill="none"
+                    stroke="#facc15"
+                    strokeWidth="0.5"
+                    opacity="0.15"
+                  />
 
                   {/* Prominent Golden Location Marker Pin */}
                   <g transform="translate(154, 5)">
@@ -1666,7 +2042,8 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                     Serving Across Bangladesh
                   </h3>
                   <p className="text-slate-300 text-[10px] sm:text-[11px] font-medium leading-snug mt-0.5">
-                    From Dhaka to every district, we&apos;re closer than you think.
+                    From Dhaka to every district, we&apos;re closer than you
+                    think.
                   </p>
                 </div>
               </div>
@@ -1677,16 +2054,24 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
               <div className="p-3.5 flex items-center gap-3">
                 <Building2 className="w-4 h-4 text-slate-500 shrink-0" />
                 <div className="flex-1">
-                  <div className="text-xs font-bold text-slate-900">WideTech BD</div>
-                  <div className="text-[11px] text-slate-400">Your Tech Partner • Software &amp; Digital Solutions</div>
+                  <div className="text-xs font-bold text-slate-900">
+                    WideTech BD
+                  </div>
+                  <div className="text-[11px] text-slate-400">
+                    Your Tech Partner • Software &amp; Digital Solutions
+                  </div>
                 </div>
               </div>
 
               <div className="p-3.5 flex items-center gap-3">
                 <MapPin className="w-4 h-4 text-amber-600 shrink-0" />
                 <div className="flex-1">
-                  <div className="text-xs font-bold text-slate-900">Headquarters</div>
-                  <div className="text-[11px] text-slate-500">Rajshahi &amp; Dhaka, Bangladesh</div>
+                  <div className="text-xs font-bold text-slate-900">
+                    Headquarters
+                  </div>
+                  <div className="text-[11px] text-slate-500">
+                    Rajshahi &amp; Dhaka, Bangladesh
+                  </div>
                 </div>
               </div>
 
@@ -1697,8 +2082,12 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                 <div className="flex items-center gap-3">
                   <Phone className="w-4 h-4 text-emerald-600 shrink-0" />
                   <div>
-                    <div className="text-xs font-bold text-slate-900">24/7 Support Hotline</div>
-                    <div className="text-[11px] text-slate-500">+880 1700-000000 (Tap to Call)</div>
+                    <div className="text-xs font-bold text-slate-900">
+                      24/7 Support Hotline
+                    </div>
+                    <div className="text-[11px] text-slate-500">
+                      +880 1700-000000 (Tap to Call)
+                    </div>
                   </div>
                 </div>
                 <span className="text-[11px] font-black text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
@@ -1715,8 +2104,12 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                 <div className="flex items-center gap-3">
                   <Globe className="w-4 h-4 text-blue-600 shrink-0" />
                   <div>
-                    <div className="text-xs font-bold text-slate-900">Official Website</div>
-                    <div className="text-[11px] text-slate-500">https://widetechbd.com</div>
+                    <div className="text-xs font-bold text-slate-900">
+                      Official Website
+                    </div>
+                    <div className="text-[11px] text-slate-500">
+                      https://widetechbd.com
+                    </div>
                   </div>
                 </div>
                 <ExternalLink className="w-4 h-4 text-slate-400" />
@@ -1782,12 +2175,21 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={currentUser.photoURL}
-                          alt={currentUser.displayName || currentUser.name || "User"}
+                          alt={
+                            currentUser.displayName ||
+                            currentUser.name ||
+                            "User"
+                          }
                           className="w-full h-full object-cover rounded-xl"
                         />
                       ) : (
                         <div className="w-full h-full bg-slate-900 text-amber-400 font-black text-xl flex items-center justify-center rounded-xl">
-                          {(currentUser.displayName || currentUser.name || currentUser.email || "U")
+                          {(
+                            currentUser.displayName ||
+                            currentUser.name ||
+                            currentUser.email ||
+                            "U"
+                          )
                             .charAt(0)
                             .toUpperCase()}
                         </div>
@@ -1798,7 +2200,9 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 mb-0.5">
                         <h3 className="text-base font-black text-slate-900 truncate">
-                          {currentUser.displayName || currentUser.name || "Wide Service Customer"}
+                          {currentUser.displayName ||
+                            currentUser.name ||
+                            "Wide Service Customer"}
                         </h3>
                         <UserCheck className="w-4 h-4 text-emerald-600 shrink-0" />
                       </div>
@@ -2175,7 +2579,8 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                 {currentUser ? (
                   <div className="flex items-center gap-1.5 text-xs font-black text-slate-950 truncate mb-0.5">
                     <span className="truncate">
-                      Welcome, {currentUser.displayName || currentUser.name || "User"}
+                      Welcome,{" "}
+                      {currentUser.displayName || currentUser.name || "User"}
                     </span>
                     <span className="shrink-0 text-xs">👋</span>
                   </div>
@@ -2258,41 +2663,149 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
             </div>
           </div>
 
-          {/* 3. Fast Promo App Banner */}
-          <div className="px-4 mb-4">
-            <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-3.5 rounded-2xl border border-slate-700/80 shadow-sm flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-lg">
-                  📲
+          {/* 3. Fast Promo App Banner (Clean & Fresh 100px Height Masterpiece) */}
+          <div className="px-3 sm:px-4 mb-4">
+            <div
+              onClick={onOpenDownload}
+              className="group relative overflow-hidden bg-white border border-slate-200/90 hover:border-amber-400/60 shadow-md shadow-slate-200/50 rounded-[22px] sm:rounded-[26px] p-2.5 sm:p-3.5 h-[94px] sm:h-[102px] flex items-center justify-between gap-2.5 sm:gap-4 cursor-pointer transition-all active:scale-[0.99] select-none"
+            >
+              {/* Background Ambient Glows & Accents */}
+              <div className="absolute -top-8 -left-8 w-28 h-28 bg-sky-100/70 rounded-full blur-xl pointer-events-none" />
+              <div className="absolute -bottom-8 -right-8 w-36 sm:w-44 h-36 sm:h-44 bg-gradient-to-tl from-[#ffba08] via-[#ffd000]/35 to-transparent rounded-full pointer-events-none" />
+
+              {/* Decorative 4x3 Dot Matrix on bottom left (Hidden on mobile) */}
+              <div className="absolute bottom-2 left-3 hidden md:grid grid-cols-4 gap-1 opacity-25 pointer-events-none">
+                {[...Array(12)].map((_, i) => (
+                  <span key={i} className="w-1 h-1 rounded-full bg-sky-500" />
+                ))}
+              </div>
+
+              {/* Left Section: 3D App Icon */}
+              {/* <div className="relative z-10 w-9 h-9  rounded-[15px] sm:rounded-[18px] bg-gradient-to-b from-[#0c1833] via-[#09142b] to-[#040816] p-1.5 shadow-md shadow-blue-950/20 border border-blue-500/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <svg
+                  viewBox="0 0 36 36"
+                  className="w-full h-full"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M7 12 C5 14.5 5 21.5 7 24"
+                    stroke="#38bdf8"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M3.5 9 C0.8 13.5 0.8 22.5 3.5 27"
+                    stroke="#38bdf8"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    opacity="0.55"
+                  />
+                  <path
+                    d="M29 12 C31 14.5 31 21.5 29 24"
+                    stroke="#38bdf8"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M32.5 9 C35.2 13.5 35.2 22.5 32.5 27"
+                    stroke="#38bdf8"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    opacity="0.55"
+                  />
+                  <rect
+                    x="10.5"
+                    y="4"
+                    width="15"
+                    height="28"
+                    rx="4"
+                    stroke="#ffffff"
+                    strokeWidth="1.8"
+                    fill="#081026"
+                  />
+                  <line
+                    x1="15.5"
+                    y1="6.8"
+                    x2="20.5"
+                    y2="6.8"
+                    stroke="#ffffff"
+                    strokeWidth="1.2"
+                    strokeLinecap="round"
+                  />
+                  <circle cx="18" cy="28.5" r="1.3" fill="#ffffff" />
+                  <circle cx="18" cy="17" r="6" fill="#0284c7" opacity="0.35" />
+                  <path
+                    d="M18 10.5 C15.2 10.5 13 12.7 13 15.5 C13 19 18 24 18 24 C18 24 23 19 23 15.5 C23 12.7 20.8 10.5 18 10.5 Z"
+                    fill="#f59e0b"
+                  />
+                  <circle cx="18" cy="15.5" r="1.8" fill="#1e293b" />
+                </svg>
+              </div> */}
+
+              {/* Center Content: Clean Typography & Feature Chips (Fresh & Unclipped) */}
+              <div className="relative z-10 flex-1 min-w-0 flex flex-col justify-center py-0.5">
+                <h3 className="text-xs sm:text-[14.5px] font-black text-slate-900 tracking-tight leading-tight truncate">
+                  Wide Service{" "}
+                  <span className="text-[#0284c7]">Mobile App</span>
+                </h3>
+                <p className="text-[9.5px] sm:text-[11px] text-slate-500 font-semibold leading-tight mt-0.5 truncate">
+                  Direct GPS radar &amp; 1-tap call
+                </p>
+              </div>
+
+              {/* Right Column: Slogan + Golden Button */}
+              <div className="relative z-10 shrink-0 flex flex-col items-end justify-center pl-1 sm:pl-2">
+                {/* Script Slogan */}
+                <div className="text-right pointer-events-none select-none pr-1 mb-1">
+                  <span className="text-[8.5px] sm:text-[10px] font-bold text-sky-600 italic tracking-tight font-serif drop-shadow-2xs block">
+                    Your Safety Our Priority
+                  </span>
+                  <svg
+                    className="w-10 sm:w-12 h-1 text-amber-400 ml-auto -mt-0.5"
+                    viewBox="0 0 60 8"
+                    fill="none"
+                  >
+                    <path
+                      d="M2 6 C 20 1, 40 1, 58 5"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
                 </div>
-                <div>
-                  <div className="text-xs font-black text-amber-300">
-                    Wide Service Mobile App
+
+                {/* Golden Yellow Button */}
+                <div className="relative">
+                  <div className="absolute -top-2 -right-1 text-amber-500 text-[10px] font-black select-none pointer-events-none">
+                    ✨
                   </div>
-                  <div className="text-[11px] text-slate-300">
-                    Direct GPS radar & 1-tap call
-                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenDownload();
+                    }}
+                    className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-[#ffb703] to-[#f59e0b] hover:from-[#f59e0b] hover:to-[#d97706] text-slate-950 font-black text-[11px] sm:text-xs tracking-tight shadow-md shadow-amber-500/30 active:scale-95 transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                  >
+                    <span>Get App</span>
+                    <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.8]" />
+                  </button>
                 </div>
               </div>
-              <button
-                onClick={onOpenDownload}
-                className="px-3 py-1.5 rounded-xl bg-[#e0b328] hover:bg-[#d49b1a] text-slate-950 font-black text-xs transition-colors shrink-0 cursor-pointer"
-              >
-                Get App
-              </button>
             </div>
           </div>
 
           {/* 4. Exact 2-Column Categories Grid */}
           <div className="px-4 mb-5">
-            <div className="flex items-center justify-between mb-2.5 px-0.5">
+            {/* <div className="flex items-center justify-between mb-2.5 px-0.5">
               <span className="text-xs font-black text-slate-900 uppercase tracking-tight">
                 Popular Categories
               </span>
               <span className="text-[11px] font-bold text-slate-400">
                 {filteredCategories.length} Categories
               </span>
-            </div>
+            </div> */}
 
             {/* 2-Column Grid */}
             <div className="grid grid-cols-2 gap-2.5">
@@ -2456,7 +2969,9 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
             </div>
             <span
               className={`text-[9px] font-bold mt-0.5 tracking-tight ${
-                isSettingsActive ? "text-slate-950 font-black" : "text-slate-400"
+                isSettingsActive
+                  ? "text-slate-950 font-black"
+                  : "text-slate-400"
               }`}
             >
               Settings

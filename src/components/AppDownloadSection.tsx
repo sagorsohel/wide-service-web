@@ -183,22 +183,24 @@ export const AppDownloadSection: React.FC = () => {
 
                   {/* 4. Promo Banner Card */}
                   <div className="px-3 mb-2.5">
-                    <div className="bg-[#101b33] rounded-xl p-2 flex items-center justify-between border border-slate-800 shadow-xs">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-[10px] shrink-0">
-                          📲
+                    <div className="bg-white rounded-xl p-2 flex items-center justify-between border border-slate-150 shadow-xs relative overflow-hidden">
+                      <div className="absolute -bottom-4 -right-4 w-12 h-12 bg-amber-400/30 rounded-full pointer-events-none" />
+                      <div className="flex items-center gap-2 relative z-10">
+                        <div className="w-6 h-6 rounded-lg bg-gradient-to-b from-[#0c1833] to-[#040816] border border-blue-500/20 flex items-center justify-center text-[10px] shrink-0 text-white shadow-2xs">
+                          📱
                         </div>
                         <div>
-                          <div className="text-[8px] font-black text-[#e0b328] leading-tight">
-                            Wide Service Mobile App
+                          <div className="text-[8px] font-black leading-tight">
+                            <span className="text-[#1e293b]">Wide Service </span>
+                            <span className="text-[#0284c7]">Mobile App</span>
                           </div>
                           <div className="text-[6.5px] text-slate-400 leading-tight">
                             Direct GPS radar & 1-tap call
                           </div>
                         </div>
                       </div>
-                      <span className="bg-[#e0b328] text-slate-950 text-[7px] font-black px-2 py-0.5 rounded-full shadow-2xs">
-                        Get App
+                      <span className="relative z-10 bg-gradient-to-r from-[#ffb703] to-[#f59e0b] text-slate-950 text-[7px] font-black px-2 py-0.5 rounded-full shadow-2xs">
+                        Get App →
                       </span>
                     </div>
                   </div>
