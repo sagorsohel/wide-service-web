@@ -143,9 +143,12 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
       const saved = localStorage.getItem("wide_service_auth_user");
       if (saved) {
         const parsed: UserProfile = JSON.parse(saved);
-        if (!parsed.photoURL && (parsed.displayName || parsed.name || parsed.email)) {
+        if (
+          !parsed.photoURL &&
+          (parsed.displayName || parsed.name || parsed.email)
+        ) {
           parsed.photoURL = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
-            parsed.displayName || parsed.name || parsed.email || "User"
+            parsed.displayName || parsed.name || parsed.email || "User",
           )}`;
         }
         setCurrentUser(parsed);
@@ -163,7 +166,10 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
             displayName: fbProfile.displayName || prev.displayName,
           };
           try {
-            localStorage.setItem("wide_service_auth_user", JSON.stringify(updated));
+            localStorage.setItem(
+              "wide_service_auth_user",
+              JSON.stringify(updated),
+            );
           } catch {}
           return updated;
         });
@@ -188,7 +194,9 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   // Service Reviews & Ratings State
-  const [reviewsMap, setReviewsMap] = useState<Record<string, ReviewItem[]>>({});
+  const [reviewsMap, setReviewsMap] = useState<Record<string, ReviewItem[]>>(
+    {},
+  );
   const [newRating, setNewRating] = useState(5);
   const [newComment, setNewComment] = useState("");
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
@@ -464,13 +472,14 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
         fbUser.photoURL ||
         backendRes.data?.photoURL ||
         `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
-          fbUser.displayName || fbUser.email || "User"
+          fbUser.displayName || fbUser.email || "User",
         )}`;
 
       const userObj: UserProfile = {
         id: backendRes.data?.id || fbUser.uid,
         name: backendRes.data?.name || fbUser.displayName || "Google User",
-        displayName: fbUser.displayName || backendRes.data?.name || "Google User",
+        displayName:
+          fbUser.displayName || backendRes.data?.name || "Google User",
         phone: backendRes.data?.phone || fbUser.phoneNumber || undefined,
         phoneNumber: backendRes.data?.phone || fbUser.phoneNumber || undefined,
         email: fbUser.email,
@@ -646,7 +655,8 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
         serviceId: selectedService.id,
         userName: "Tariqul Islam",
         rating: 5,
-        comment: "খুব দ্রুত সময়ে সার্ভিস পেয়েছি। টেকনিশিয়ান খুবই দক্ষ ও অমায়িক ছিলেন।",
+        comment:
+          "খুব দ্রুত সময়ে সার্ভিস পেয়েছি। টেকনিশিয়ান খুবই দক্ষ ও অমায়িক ছিলেন।",
         date: "2 days ago",
         verified: true,
       },
@@ -655,7 +665,8 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
         serviceId: selectedService.id,
         userName: "Farhana Akter",
         rating: 5,
-        comment: "Super fast response and fair pricing. Recommended for emergency service!",
+        comment:
+          "Super fast response and fair pricing. Recommended for emergency service!",
         date: "1 week ago",
         verified: true,
       },
@@ -664,7 +675,8 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
         serviceId: selectedService.id,
         userName: "Kamrul Hasan",
         rating: 4,
-        comment: "Professional behavior and solved the technical issue cleanly.",
+        comment:
+          "Professional behavior and solved the technical issue cleanly.",
         date: "2 weeks ago",
         verified: true,
       },
@@ -987,7 +999,9 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                       type="button"
                       onClick={() =>
                         setActiveImageIndex((prev) =>
-                          prev === 0 ? serviceGalleryImages.length - 1 : prev - 1,
+                          prev === 0
+                            ? serviceGalleryImages.length - 1
+                            : prev - 1,
                         )
                       }
                       className="absolute left-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/60 hover:bg-black/85 backdrop-blur-md text-white flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-md"
@@ -999,7 +1013,9 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                       type="button"
                       onClick={() =>
                         setActiveImageIndex((prev) =>
-                          prev === serviceGalleryImages.length - 1 ? 0 : prev + 1,
+                          prev === serviceGalleryImages.length - 1
+                            ? 0
+                            : prev + 1,
                         )
                       }
                       className="absolute right-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/60 hover:bg-black/85 backdrop-blur-md text-white flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-md"
@@ -1033,7 +1049,11 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                       }`}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      <img
+                        src={img}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
                     </button>
                   ))}
                 </div>
@@ -1081,7 +1101,9 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                           onError={(e) => {
                             e.currentTarget.onerror = null;
                             e.currentTarget.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
-                              currentUser.displayName || currentUser.name || "User"
+                              currentUser.displayName ||
+                                currentUser.name ||
+                                "User",
                             )}`;
                           }}
                         />
@@ -1132,12 +1154,12 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                           {newRating === 5
                             ? "⭐⭐⭐⭐⭐ Excellent (অসাধারণ)"
                             : newRating === 4
-                            ? "⭐⭐⭐⭐ Very Good (খুব ভালো)"
-                            : newRating === 3
-                            ? "⭐⭐⭐ Good (মোটামুটি)"
-                            : newRating === 2
-                            ? "⭐⭐ Fair (চলনসই)"
-                            : "⭐ Poor (উন্নত প্রয়োজন)"}
+                              ? "⭐⭐⭐⭐ Very Good (খুব ভালো)"
+                              : newRating === 3
+                                ? "⭐⭐⭐ Good (মোটামুটি)"
+                                : newRating === 2
+                                  ? "⭐⭐ Fair (চলনসই)"
+                                  : "⭐ Poor (উন্নত প্রয়োজন)"}
                         </span>
                       </div>
                     </div>
@@ -1172,7 +1194,11 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                       className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs shadow-md shadow-amber-500/25 active:scale-98 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Send className="w-3.5 h-3.5" />
-                      <span>{reviewSubmitting ? "পোস্ট হচ্ছে..." : "রিভিউ পোস্ট করুন"}</span>
+                      <span>
+                        {reviewSubmitting
+                          ? "পোস্ট হচ্ছে..."
+                          : "রিভিউ পোস্ট করুন"}
+                      </span>
                     </button>
                   </form>
                 </div>
@@ -1186,7 +1212,8 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                     রিভিউ দিতে লগইন করুন
                   </h4>
                   <p className="text-[11px] text-slate-600 font-medium max-w-xs mx-auto mt-1 mb-3.5 leading-relaxed">
-                    শুধুমাত্র ভেরিফাইড ইউজাররা টেকনিশিয়ানকে রেটিং ও রিভিউ দিতে পারবেন।
+                    শুধুমাত্র ভেরিফাইড ইউজাররা টেকনিশিয়ানকে রেটিং ও রিভিউ দিতে
+                    পারবেন।
                   </p>
                   <button
                     type="button"
@@ -1220,7 +1247,7 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                               onError={(e) => {
                                 e.currentTarget.onerror = null;
                                 e.currentTarget.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
-                                  rev.userName
+                                  rev.userName,
                                 )}`;
                               }}
                             />
@@ -1233,7 +1260,8 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                             <span>{rev.userName}</span>
                             {rev.verified && (
                               <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded-full border border-emerald-200/60 flex items-center gap-0.5">
-                                <CheckCircle2 className="w-2.5 h-2.5" /> Verified
+                                <CheckCircle2 className="w-2.5 h-2.5" />{" "}
+                                Verified
                               </span>
                             )}
                           </div>
@@ -1610,10 +1638,6 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                   </span>
                 </button>
               </div>
-
-              <span className="text-[10px] font-black text-amber-900 bg-amber-100 px-2.5 py-1 rounded-full border border-amber-300">
-                ⚡ Closest First
-              </span>
             </div>
 
             {/* Live Search Input Box */}
@@ -2300,7 +2324,9 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                           onError={(e) => {
                             e.currentTarget.onerror = null;
                             e.currentTarget.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
-                              currentUser.displayName || currentUser.name || "User"
+                              currentUser.displayName ||
+                                currentUser.name ||
+                                "User",
                             )}`;
                           }}
                         />
@@ -2622,7 +2648,9 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                         <div className="w-full border-t border-slate-200"></div>
                       </div>
                       <div className="relative flex justify-center text-[10px] uppercase tracking-wider">
-                        <span className="bg-white px-2.5 text-slate-400 font-bold">Or continue with</span>
+                        <span className="bg-white px-2.5 text-slate-400 font-bold">
+                          Or continue with
+                        </span>
                       </div>
                     </div>
 
@@ -2772,7 +2800,9 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                         onError={(e) => {
                           e.currentTarget.onerror = null;
                           e.currentTarget.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
-                            currentUser.displayName || currentUser.name || "User"
+                            currentUser.displayName ||
+                              currentUser.name ||
+                              "User",
                           )}`;
                         }}
                       />
@@ -3157,19 +3187,23 @@ export const MobileAppExperience: React.FC<MobileAppExperienceProps> = ({
                   referrerPolicy="no-referrer"
                   crossOrigin="anonymous"
                   className={`w-6 h-6 rounded-full object-cover border ${
-                    isProfileActive ? "border-slate-950 ring-1 ring-slate-950" : "border-slate-300"
+                    isProfileActive
+                      ? "border-slate-950 ring-1 ring-slate-950"
+                      : "border-slate-300"
                   }`}
                   onError={(e) => {
                     e.currentTarget.onerror = null;
                     e.currentTarget.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
-                      currentUser.displayName || currentUser.name || "User"
+                      currentUser.displayName || currentUser.name || "User",
                     )}`;
                   }}
                 />
               ) : (
                 <User
                   className={`w-5 h-5 ${
-                    isProfileActive ? "stroke-[2.6] text-slate-950" : "stroke-[2]"
+                    isProfileActive
+                      ? "stroke-[2.6] text-slate-950"
+                      : "stroke-[2]"
                   }`}
                 />
               )}
