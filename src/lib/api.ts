@@ -362,3 +362,67 @@ export async function getServiceById(id: number): Promise<Service | null> {
   }
   return FALLBACK_SERVICES.find((s) => s.id === id) || null;
 }
+
+export interface AuthUser {
+  id: number;
+  name: string;
+  phone: string;
+  email?: string | null;
+  role: string;
+  token: string;
+  firebaseToken?: string | null;
+}
+
+/**
+ * Sign in user via backend API
+ */
+export async function loginUser(
+  identifier: string,
+  password: string
+): Promise<{ success: boolean; message?: string; data?: AuthUser }> {
+  try {
+    const res = await fetch(`${BACKEND_BASE_URL}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier: identifier.trim(), password }),
+    });
+    const json = await res.json();
+    if (!res.ok || !json.success) {
+      return { success: false, message: json.message || "Failed to log in" };
+    }
+    return { success: true, data: json.data };
+  } catch (err: any) {
+    return { success: false, message: err?.message || "Network error. Please try again." };
+  }
+}
+
+/**
+ * Register new user via backend API
+ */
+export async function registerUser(
+  name: string,
+  phone: string,
+  password: string,
+  email?: string
+): Promise<{ success: boolean; message?: string; data?: AuthUser }> {
+  try {
+    const res = await fetch(`${BACKEND_BASE_URL}/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: name.trim(),
+        phone: phone.trim(),
+        password,
+        email: email ? email.trim() : undefined,
+      }),
+    });
+    const json = await res.json();
+    if (!res.ok || !json.success) {
+      return { success: false, message: json.message || "Failed to register" };
+    }
+    return { success: true, data: json.data };
+  } catch (err: any) {
+    return { success: false, message: err?.message || "Network error. Please try again." };
+  }
+}
+
