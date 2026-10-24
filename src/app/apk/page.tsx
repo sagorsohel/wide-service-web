@@ -44,7 +44,7 @@ interface AppReleaseItem {
   createdAt: string;
 }
 
-export default function ApkDownloadPage() {
+function ApkDownloadContent() {
   const [userLocation, setUserLocation] = useState<UserLocation>(DEFAULT_USER_LOCATION);
   const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
   const [isMobileAppMode, setIsMobileAppMode] = useState(false);
@@ -62,7 +62,7 @@ export default function ApkDownloadPage() {
     minOsVersion: "Android 7.0+",
     isActive: 1,
     downloadsCount: 142,
-    createdAt: new Date().toISOString(),
+    createdAt: "2026-10-24T00:00:00.000Z",
   });
 
   const [iosRelease, setIosRelease] = useState<AppReleaseItem>({
@@ -77,7 +77,7 @@ export default function ApkDownloadPage() {
     minOsVersion: "iOS 14.0+",
     isActive: 1,
     downloadsCount: 98,
-    createdAt: new Date().toISOString(),
+    createdAt: "2026-10-24T00:00:00.000Z",
   });
 
   const [androidQr, setAndroidQr] = useState<string>("");
@@ -621,5 +621,13 @@ export default function ApkDownloadPage() {
       {/* Global Brand Footer */}
       <Footer />
     </div>
+  );
+}
+
+export default function ApkDownloadPage() {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen bg-[#070d1d] flex items-center justify-center text-amber-400 font-bold">Loading Wide Service APK...</div>}>
+      <ApkDownloadContent />
+    </React.Suspense>
   );
 }
