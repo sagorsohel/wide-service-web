@@ -78,6 +78,7 @@ export const Header: React.FC<HeaderProps> = ({
             {[
               { name: "Home", href: "/" },
               { name: "Services", href: "/services" },
+              { name: "Download App", href: "/apk" },
               { name: "How It Works", href: "/#how-it-works" },
               { name: "About", href: "/about" },
               { name: "Contact", href: "/contact" },
@@ -95,6 +96,11 @@ export const Header: React.FC<HeaderProps> = ({
                   }`}
                 >
                   <span>{item.name}</span>
+                  {item.name === "Download App" && (
+                    <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800 uppercase">
+                      APK
+                    </span>
+                  )}
                   {isActive && (
                     <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#d49b1a] rounded-full" />
                   )}
@@ -127,14 +133,15 @@ export const Header: React.FC<HeaderProps> = ({
               <Search className="w-4 h-4" />
             </button>
 
-            {/* Mobile App View / QR Icon Button */}
-            <button
-              onClick={onToggleMobileAppMode}
-              className="w-9 h-9 rounded-full border border-slate-200/80 bg-white hover:bg-slate-50 text-slate-600 flex items-center justify-center transition-colors cursor-pointer shadow-2xs"
-              title="Toggle Mobile App Layout"
+            {/* Mobile App Download Button */}
+            <a
+              href="/apk"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs transition-colors cursor-pointer shadow-2xs"
+              title="Download Wide Service Android & iOS App"
             >
-              <Smartphone className="w-4 h-4" />
-            </button>
+              <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="hidden md:inline">App APK</span>
+            </a>
 
             {/* Golden Login / Register Pill Button */}
             <a
@@ -179,6 +186,7 @@ export const Header: React.FC<HeaderProps> = ({
             {[
               { name: "Home", href: "/" },
               { name: "Services", href: "/services" },
+              { name: "Download App (APK)", href: "/apk" },
               { name: "How It Works", href: "/#how-it-works" },
               { name: "About", href: "/about" },
               { name: "Contact", href: "/contact" },
@@ -187,7 +195,9 @@ export const Header: React.FC<HeaderProps> = ({
                 key={item.name}
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-left p-2.5 hover:bg-slate-50 rounded-xl block font-medium"
+                className={`text-left p-2.5 hover:bg-slate-50 rounded-xl block font-medium ${
+                  item.href === "/apk" ? "text-emerald-700 font-bold bg-emerald-50/50" : ""
+                }`}
               >
                 {item.name}
               </a>
