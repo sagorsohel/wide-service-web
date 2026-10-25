@@ -78,7 +78,7 @@ export const Header: React.FC<HeaderProps> = ({
             {[
               { name: "Home", href: "/" },
               { name: "Services", href: "/services" },
-              { name: "Download App", href: "/apk" },
+
               { name: "How It Works", href: "/#how-it-works" },
               { name: "About", href: "/about" },
               { name: "Contact", href: "/contact" },
@@ -159,7 +159,11 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="lg:hidden p-2 rounded-xl text-slate-700 hover:bg-slate-100 transition-colors"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
             </button>
           </div>
         </div>
@@ -177,7 +181,9 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <div className="flex items-center gap-2">
               <MapPin className="w-4 h-4 text-[#d49b1a]" />
-              <span>Location: {userLocation.area}, {userLocation.city}</span>
+              <span>
+                Location: {userLocation.area}, {userLocation.city}
+              </span>
             </div>
             <span className="text-[#d49b1a] text-xs font-black">Change</span>
           </button>
@@ -186,7 +192,7 @@ export const Header: React.FC<HeaderProps> = ({
             {[
               { name: "Home", href: "/" },
               { name: "Services", href: "/services" },
-              { name: "Download App (APK)", href: "/apk" },
+
               { name: "How It Works", href: "/#how-it-works" },
               { name: "About", href: "/about" },
               { name: "Contact", href: "/contact" },
@@ -196,7 +202,9 @@ export const Header: React.FC<HeaderProps> = ({
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`text-left p-2.5 hover:bg-slate-50 rounded-xl block font-medium ${
-                  item.href === "/apk" ? "text-emerald-700 font-bold bg-emerald-50/50" : ""
+                  item.href === "/apk"
+                    ? "text-emerald-700 font-bold bg-emerald-50/50"
+                    : ""
                 }`}
               >
                 {item.name}
