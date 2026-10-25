@@ -21,6 +21,7 @@ export interface WideUserProfile {
   photoURL?: string | null;
   createdAt?: string;
   role?: string;
+  idToken?: string;
 }
 
 export const firebaseConfig = {
@@ -39,8 +40,8 @@ let auth: Auth | null = null;
 let analytics: Analytics | null = null;
 
 const isConfigured = Boolean(
-  process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
-  process.env.NEXT_PUBLIC_FIREBASE_API_KEY !== "AIzaSyDummyKeyForWideServiceApp2026"
+  firebaseConfig.apiKey &&
+  firebaseConfig.apiKey !== "AIzaSyDummyKeyForWideServiceApp2026"
 );
 
 try {
@@ -171,6 +172,7 @@ export async function loginWithGoogle(): Promise<WideUserProfile> {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: "select_account" });
     const cred = await signInWithPopup(auth, provider);
+    const idToken = await cred.user.getIdToken();
     const fallbackAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
       cred.user.displayName || cred.user.email || "GoogleUser"
     )}`;
@@ -181,6 +183,7 @@ export async function loginWithGoogle(): Promise<WideUserProfile> {
       phoneNumber: cred.user.phoneNumber,
       photoURL: cred.user.photoURL || fallbackAvatar,
       createdAt: cred.user.metadata.creationTime,
+      idToken,
     };
     saveLocalUser(profile);
     return profile;

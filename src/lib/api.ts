@@ -453,3 +453,30 @@ export async function googleLoginUser(payload: {
   }
 }
 
+export interface AppNotification {
+  id: number | string;
+  title: string;
+  body: string;
+  imageUrl?: string | null;
+  target?: "all" | "users_only" | "guests_only";
+  sentAt?: string | null;
+  createdAt?: string;
+}
+
+/**
+ * Fetch public notifications feed from backend
+ */
+export async function getPublicNotifications(): Promise<AppNotification[]> {
+  try {
+    const res = await fetch(`${BACKEND_BASE_URL}/notifications/public`);
+    const json = await res.json();
+    if (json.success && Array.isArray(json.data)) {
+      return json.data;
+    }
+  } catch (err) {
+    console.warn("[Wide Service] Error fetching public notifications:", err);
+  }
+  return [];
+}
+
+
